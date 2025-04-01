@@ -64,6 +64,22 @@ namespace Files
 }
 
 
+namespace PluginUpdates
+{
+	struct PluginUpdateResponse
+	{
+		bool out_of_date = false;
+		std::string latest_version;
+		std::string release_url;
+	};
+
+	extern PluginUpdateResponse update_response;
+	extern std::mutex update_mutex;
+
+	void check_for_updates(const std::string& mod_name, const std::string& current_version);
+}
+
+
 namespace Process
 {
 	struct ProcessHandles

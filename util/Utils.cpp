@@ -459,6 +459,61 @@ namespace Files
 }
 
 
+namespace PluginUpdates
+{
+	PluginUpdateResponse update_response;
+	std::mutex update_mutex;
+
+
+	void check_for_updates(const std::string& mod_name, const std::string& current_version)
+	{
+		CurlRequest req;
+		req.url = "https://raw.githubusercontent.com/smallest-cock/plugin-data/main/versions.json";
+
+		HttpWrapper::SendCurlRequest(req, [mod_name, current_version](int code, std::string result)
+			{
+				if (code != 200)
+				{
+					LOG("ERROR: Check for update HTTP Request Failed!");
+					return;
+				}
+
+				try
+				{
+					auto response_json = json::parse(result);
+					auto plugin_version_data = response_json[mod_name];
+					std::string latest_version = plugin_version_data["version"];
+					std::string release_url = plugin_version_data["releasePage"];
+
+					{
+						std::lock_guard<std::mutex> lock(update_mutex);
+						update_response.latest_version = latest_version;
+						update_response.release_url = release_url;
+						update_response.out_of_date = (current_version != latest_version);
+					}
+
+					if (current_version != latest_version)
+					{
+						LOG("New version available: {}", latest_version);
+					}
+					else
+					{
+						LOG("Plugin is up to date: {}", current_version);
+					}
+				}
+				catch (...)
+				{
+					LOG("JSON Parsing Error!");
+				}
+
+				LOG("mod_name: {}", mod_name);
+				LOG("current_version: {}", current_version);
+				LOG("Body result: {}", result);
+			});
+	}
+}
+
+
 namespace Process
 {
 	void close_handle(HANDLE h)

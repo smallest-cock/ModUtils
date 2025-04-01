@@ -142,7 +142,7 @@ namespace GUI
 
 		ImGui::Text(plugin_version);
 
-		//plugin_update_message();
+		plugin_update_message();
 
 		ImGui::Separator();
 	}
@@ -160,5 +160,36 @@ namespace GUI
 		ClickableLink(text, url, text_color, text_size);
 
 		ImGui::SetWindowFontScale(1);	// undo font scale modification, so it doesnt affect the rest of the UI
+	}
+
+	void plugin_update_message()
+	{
+		PluginUpdates::PluginUpdateResponse update_status;
+
+		{
+			std::lock_guard<std::mutex> lock(PluginUpdates::update_mutex);
+			update_status = PluginUpdates::update_response;
+		}
+
+		if (update_status.out_of_date)
+		{
+			GUI::SameLineSpacing_relative(20);
+
+			ImGui::TextColored(GUI::Colors::Red, "<------ PLUGIN IS OUT OF DATE!");
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip(
+					"Using an outdated version can cause features to work incorrectly or even crash the game!\n\n"
+					"Unfortunately there's no built in auto-update system for plugins that aren't on the BakkesPlugins website :(\n\n"
+					"So just follow the install steps on the latest GitHub release to update manually\t(it's very easy)"
+				);
+			}
+			GUI::SameLineSpacing_relative(20);
+			ImGui::Text("The latest version is v%s:", update_status.latest_version.c_str());
+
+			GUI::SameLineSpacing_relative(10);
+
+			GUI::ClickableLink("Update to latest version", update_status.release_url.c_str(), GUI::Colors::Green);
+		}
 	}
 }

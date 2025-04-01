@@ -1,6 +1,6 @@
 #pragma once
 #include "pch.h"
-#include "Components/Components/Utils.hpp"
+#include "../util/Utils.hpp"
 
 
 namespace GUI
@@ -345,4 +345,6 @@ namespace GUI
 
 	void alt_settings_header(const char* text, const char* plugin_version, const ImVec4& text_color = Colors::Pinkish);
 	void alt_settings_footer(const char* text, const char* url, const ImVec4& text_color = Colors::Yellow);
+
+	void plugin_update_message();
 }

@@ -5,6 +5,8 @@
 
 namespace Format
 {
+	void construct_label(const std::vector<int>& codes, std::string& out_str);
+
 	std::string ToASCIIString(std::string str);
 
 	std::string ToHexString(uintptr_t address);

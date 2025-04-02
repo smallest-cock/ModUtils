@@ -5,6 +5,17 @@
 
 namespace Format
 {
+	void construct_label(const std::vector<int>& codes, std::string& out_str)
+	{
+		out_str.clear();
+
+		for (int code : codes)
+		{
+			out_str += letters[code];
+		}
+	}
+
+
     std::string ToASCIIString(std::string str)
     {
         // Remove non-ASCII characters

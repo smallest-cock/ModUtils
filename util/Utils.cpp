@@ -38,6 +38,24 @@ namespace Format
         return std::format("0x{:0{}X}", decimal_val, min_hex_digits);
     }
 
+	uintptr_t HexToIntPointer(const std::string& hexStr)
+	{
+		uintptr_t decimal = NULL;
+		std::stringstream stream;
+
+		stream << std::hex << hexStr;							// Load the hex string into the stream for conversion
+
+		// Attempt conversion and handle errors
+		if (!(stream >> decimal))
+		{
+			LOG("[ERROR] Invalid hexadecimal string: " + hexStr);
+			return NULL;
+		}
+
+		return decimal;
+	}
+
+
     std::string LinearColorToHex(const LinearColor& color)
     {
         // Create a stringstream to format the hex string
@@ -106,6 +124,19 @@ namespace Format
         return tokens;
     }
 
+	std::pair<std::string, std::string> SplitStringInTwo(const std::string& str, const std::string& delimiter)
+	{
+		size_t pos = str.find(delimiter);
+		if (pos == std::string::npos) {
+			return { str, "" };  // If delimiter is not found, return the original string and an empty string.
+		}
+
+		std::string left = str.substr(0, pos);
+		std::string right = str.substr(pos + delimiter.length());
+
+		return { left, right };
+	}
+
     std::string EscapeBraces(const std::string& str)
     {
         std::string escaped;
@@ -173,6 +204,16 @@ namespace Format
 
         return okPal;
     }
+
+	std::string RemoveTrailingChar(std::string str, char trailingChar)
+	{
+		if (!str.empty() && str.back() == trailingChar) {
+			str.pop_back();  // Removes the last character
+		}
+
+		return str;
+	}
+
 
     bool check_string_using_filters(const std::string& input, const std::vector<std::string>& whitelist_terms, const std::vector<std::string>& blacklist_terms)
     {

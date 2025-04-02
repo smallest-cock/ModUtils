@@ -334,6 +334,8 @@ namespace GUI
 		extern const ImVec4 LightGreen;
 
 		extern const ImVec4 DarkGreen;
+		extern const ImVec4 ForestGreen;
+		extern const ImVec4 RealDarkGreen;
 
 		extern const ImVec4 Gray;
 	}

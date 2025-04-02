@@ -22,15 +22,18 @@ namespace Format
 	{
 		return ToHexString(reinterpret_cast<uintptr_t>(ptr_to_obj));
 	}
+	uintptr_t HexToIntPointer(const std::string& hexStr);
 
 	std::string LinearColorToHex(const LinearColor& color);
 
 	std::string GenRandomString(int length);
 	std::vector<std::string> SplitStrByNewline(const std::string& input);
 	std::vector<std::string> SplitStr(const std::string& str, const std::string& delimiter);
+	std::pair<std::string, std::string> SplitStringInTwo(const std::string& str, const std::string& delimiter);
 	std::string EscapeBraces(const std::string& str);
 	std::string EscapeQuotesHTML(const std::string& input);
 	std::string UnescapeQuotesHTML(const std::string& input);
+	std::string RemoveTrailingChar(std::string str, char trailingChar);
 
 	bool check_string_using_filters(const std::string& input, const std::vector<std::string>& whitelist_terms, const std::vector<std::string>& blacklist_terms);
 

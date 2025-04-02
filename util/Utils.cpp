@@ -575,7 +575,7 @@ namespace Process
 		si.cb = sizeof(si);
 		ZeroMemory(&pi, sizeof(pi));
 
-		std::wstring wide_command = Format::ToWideString(command);
+		std::wstring wide_command = StringUtils::ToWideString(command);
 
 		// initialize result
 		CreateProcessResult result;

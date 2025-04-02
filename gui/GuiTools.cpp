@@ -27,11 +27,8 @@ namespace GUI
 
 	void open_link(const char* url)
 	{
-		const wchar_t* w_url = Format::ToWcharString(url);
-
-		ShellExecute(NULL, L"open", w_url, NULL, NULL, SW_SHOWNORMAL);
-
-		delete[] w_url;
+		std::wstring wide_url = StringUtils::ToWideString(url);
+		ShellExecute(NULL, L"open", wide_url.c_str(), NULL, NULL, SW_SHOWNORMAL);
 	}
 
 	void open_link(const wchar_t* url)

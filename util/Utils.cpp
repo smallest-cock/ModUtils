@@ -215,6 +215,52 @@ namespace Format
 		return str;
 	}
 
+	std::string EscapeForHTML(const std::string& input)
+	{
+		std::string output;
+		output.reserve(input.size());  // reserve space to reduce reallocations
+	
+		for (char ch : input)
+		{
+			switch (ch)
+			{
+			case '&':
+				output += "&amp;";
+				break;
+			case '<':
+				output += "&lt;";
+				break;
+			case '>':
+				output += "&gt;";
+				break;
+			case '"':
+				output += "&quot;";
+				break;
+			case '\'':
+				output += "&apos;";
+				break;
+			default:
+				output += ch;
+				break;
+			}
+		}
+	
+		return output;
+	}
+
+	std::string EscapeCharForHTML(char ch)
+	{
+		switch (ch)
+		{
+			case '&':  return "&amp;";
+			case '<':  return "&lt;";
+			case '>':  return "&gt;";
+			case '"':  return "&quot;";
+			case '\'': return "&apos;";
+			default:   return std::string(1, ch);  // Wrap single char into string
+		}
+	}
+
 
     bool check_string_using_filters(const std::string& input, const std::vector<std::string>& whitelist_terms, const std::vector<std::string>& blacklist_terms)
     {

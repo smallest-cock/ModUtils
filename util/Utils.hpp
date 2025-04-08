@@ -34,6 +34,8 @@ namespace Format
 	std::string EscapeQuotesHTML(const std::string& input);
 	std::string UnescapeQuotesHTML(const std::string& input);
 	std::string RemoveTrailingChar(std::string str, char trailingChar);
+	std::string EscapeForHTML(const std::string& input);
+	std::string EscapeCharForHTML(char ch);
 
 	bool check_string_using_filters(const std::string& input, const std::vector<std::string>& whitelist_terms, const std::vector<std::string>& blacklist_terms);
 

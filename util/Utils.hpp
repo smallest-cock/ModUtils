@@ -24,7 +24,7 @@ namespace Format
 	}
 	uintptr_t HexToIntPointer(const std::string& hexStr);
 
-	std::string LinearColorToHex(const LinearColor& color);
+	std::string LinearColorToHex(const LinearColor& color, bool use_alpha = true);
 
 	std::string GenRandomString(int length);
 	std::vector<std::string> SplitStrByNewline(const std::string& input);

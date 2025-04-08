@@ -56,7 +56,7 @@ namespace Format
 	}
 
 
-    std::string LinearColorToHex(const LinearColor& color)
+	std::string LinearColorToHex(const LinearColor& color, bool use_alpha)
     {
         // Create a stringstream to format the hex string
         std::stringstream ss;
@@ -66,7 +66,8 @@ namespace Format
         ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.R);
         ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.G);
         ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.B);
-        //ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.A);		// ingore the alpha value, so the hex string is 6 chars
+		if (use_alpha)
+			ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.A);
 
         // Return the formatted string
         return ss.str();

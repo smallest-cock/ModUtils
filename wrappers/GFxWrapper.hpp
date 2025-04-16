@@ -17,7 +17,7 @@ public:
 
 	UGFxDataRow_X* get_gfx_row();
 	UGFxDataStore_X* get_datastore();
-	[[nodiscard]] bool is_null();
+	_NODISCARD bool is_null();
 
 	// setters
 	void set_string(const std::string& col_name, const std::string& value);

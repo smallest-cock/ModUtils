@@ -107,6 +107,18 @@ namespace Format
         return lines;
     }
 
+	std::vector<std::string> SplitStr(const std::string& str, char delimiter)
+	{
+		std::vector<std::string> parts;
+		std::stringstream ss(str);
+		std::string item;
+		while (std::getline(ss, item, delimiter))
+		{
+			parts.push_back(item);
+		}
+		return parts;
+	}
+
     std::vector<std::string> SplitStr(const std::string& str, const std::string& delimiter)
     {
         std::vector<std::string> tokens;
@@ -737,6 +749,34 @@ namespace Colors
 	{
 		FColor fColor = FLinearColorToFColor(color);
 		return Color(fColor).ToDecimal();
+	}
+
+	std::string fcolorToHexRGBA(const FColor& col)
+	{
+		std::stringstream ss;
+		ss << "0x" << std::uppercase << std::setfill('0') << std::hex
+			<< std::setw(2) << static_cast<int>(col.R)
+			<< std::setw(2) << static_cast<int>(col.G)
+			<< std::setw(2) << static_cast<int>(col.B)
+			<< std::setw(2) << static_cast<int>(col.A);
+		return ss.str();
+	}
+
+	FColor hexRGBAtoFColor(const std::string& hex)
+	{
+		if (hex.size() != 10 || hex.substr(0, 2) != "0x")
+			throw std::invalid_argument("Invalid color hex string format. Expected format: 0xRRGGBBAA");
+
+		// Convert hex string (skip '0x')
+		uint32_t value = std::stoul(hex.substr(2), nullptr, 16);
+
+		FColor col;
+		col.R = (value >> 24) & 0xFF;
+		col.G = (value >> 16) & 0xFF;
+		col.B = (value >> 8) & 0xFF;
+		col.A = value & 0xFF;
+
+		return col;
 	}
 }
 

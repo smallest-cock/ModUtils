@@ -28,6 +28,7 @@ namespace Format
 
 	std::string GenRandomString(int length);
 	std::vector<std::string> SplitStrByNewline(const std::string& input);
+	std::vector<std::string> SplitStr(const std::string& str, char delimiter);
 	std::vector<std::string> SplitStr(const std::string& str, const std::string& delimiter);
 	std::pair<std::string, std::string> SplitStringInTwo(const std::string& str, const std::string& delimiter);
 	std::string EscapeBraces(const std::string& str);
@@ -251,6 +252,8 @@ namespace Colors
 	FLinearColor CvarColorToFLinearColor(const LinearColor& cvarColor);
 	FColor FLinearColorToFColor(const FLinearColor& color);
 	int32_t FLinearColorToInt(const FLinearColor& color);
+	std::string fcolorToHexRGBA(const FColor& col);
+	FColor hexRGBAtoFColor(const std::string& hex);
 
 	// Color to Decimal/Base10
 	inline uint32_t HexToDecimal(std::string hexStr) { return Color(hexStr).ToDecimal(); }

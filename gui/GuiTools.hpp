@@ -15,6 +15,32 @@ namespace GUI
 	void SameLineSpacing_absolute(float horizontalSpacingPx);
 
 
+	// scoped version of BeginChild/EndChild
+	// Usage: GUI::ScopedChild c{ "SomeLabel", ... };
+	struct ScopedChild
+	{
+		ScopedChild(const char* str_id, const ImVec2& size = ImVec2(0, 0), bool border = false, ImGuiWindowFlags flags = 0)
+		{
+			ImGui::BeginChild(str_id, size, border, flags);
+		}
+
+		~ScopedChild() { ImGui::EndChild(); }
+	};
+
+	// scoped version of PushID/PopID
+	// Usage: GUI::ScopedID id{ "SomeID" };
+	struct ScopedID
+	{
+		ScopedID(const char* str_id)								{ ImGui::PushID(str_id); }
+		ScopedID(const char* str_id_begin, const char* str_id_end)	{ ImGui::PushID(str_id_begin, str_id_end); }
+		ScopedID(const void* ptr_id)								{ ImGui::PushID(ptr_id); }
+		ScopedID(int id)											{ ImGui::PushID(id); }
+
+		~ScopedID() { ImGui::PopID(); }
+	};
+
+
+
 	static constexpr float footer_icon_height =		25.0f;
 
 	static constexpr const wchar_t* discord_link =	L"https://discord.gg/tHZFsMsvDU";

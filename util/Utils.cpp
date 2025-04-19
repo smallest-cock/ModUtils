@@ -260,6 +260,43 @@ namespace Format
 		return output;
 	}
 
+	std::string EscapeForHTMLIncludingSpaces(const std::string& input)
+	{
+		std::string output;
+		output.reserve(input.size());  // reserve space to reduce reallocations
+
+		for (char ch : input)
+		{
+			switch (ch)
+			{
+			case '&':
+				output += "&amp;";
+				break;
+			case ' ':
+				output += "+";
+				break;
+			case '<':
+				output += "&lt;";
+				break;
+			case '>':
+				output += "&gt;";
+				break;
+			case '"':
+				output += "&quot;";
+				break;
+			case '\'':
+				output += "&apos;";
+				break;
+			default:
+				output += ch;
+				break;
+			}
+		}
+
+		return output;
+	}
+
+
 	std::string EscapeCharForHTML(char ch)
 	{
 		switch (ch)

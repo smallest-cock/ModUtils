@@ -769,22 +769,10 @@ namespace Colors
 		return FLinearColor{ fixedColor.R, fixedColor.G, fixedColor.B, fixedColor.A };
 	}
 
-	
-	FColor FLinearColorToFColor(const FLinearColor& color)
-	{
-		FColor fColor;
-		fColor.R = color.R * 255;
-		fColor.G = color.G * 255;
-		fColor.B = color.B * 255;
-		fColor.A = color.A * 255;
-
-		return fColor;
-	}
-
 
 	int32_t FLinearColorToInt(const FLinearColor& color)
 	{
-		FColor fColor = FLinearColorToFColor(color);
+		FColor fColor = fLinearColorToFColor(color);
 		return Color(fColor).ToDecimal();
 	}
 

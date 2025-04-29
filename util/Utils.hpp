@@ -251,10 +251,29 @@ public:
 namespace Colors
 {
 	FLinearColor CvarColorToFLinearColor(const LinearColor& cvarColor);
-	FColor FLinearColorToFColor(const FLinearColor& color);
 	int32_t FLinearColorToInt(const FLinearColor& color);
 	std::string fcolorToHexRGBA(const FColor& col);
 	FColor hexRGBAtoFColor(const std::string& hex);
+
+	inline FColor fLinearColorToFColor(const FLinearColor& color)
+	{
+		return FColor{
+			static_cast<uint8_t>(color.B * 255),
+			static_cast<uint8_t>(color.G * 255),
+			static_cast<uint8_t>(color.R * 255),
+			static_cast<uint8_t>(color.A * 255)
+		}; // BGRA
+	}
+
+	inline FLinearColor fColorToFLinearColor(const FColor& color)
+	{
+		return FLinearColor{
+			static_cast<float>(color.R) / 255.0f,
+			static_cast<float>(color.G) / 255.0f,
+			static_cast<float>(color.B) / 255.0f,
+			static_cast<float>(color.A) / 255.0f
+		}; // RGBA
+	}
 
 	// Color to Decimal/Base10
 	inline uint32_t HexToDecimal(std::string hexStr) { return Color(hexStr).ToDecimal(); }

@@ -16,6 +16,13 @@ namespace Format
 	std::string ToASCIIString(std::string str);
 
 	std::string ToHexString(uintptr_t address);
+
+	inline std::string ToHexString(HRESULT hr)
+	{
+		constexpr int hexDigitWidth = sizeof(HRESULT) * 2; // Each byte is 2 hex digits
+		return std::format("0x{:0{}X}", static_cast<unsigned long>(hr), hexDigitWidth);
+	}
+
 	std::string ToHexString(int32_t decimal_val, int32_t min_hex_digits);
 	template <typename T>
 	std::string ToHexString(T* ptr_to_obj)

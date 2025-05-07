@@ -262,6 +262,22 @@ namespace Colors
 	std::string fcolorToHexRGBA(const FColor& col);
 	FColor hexRGBAtoFColor(const std::string& hex);
 
+	// Swizzle pixel data (i.e. RGBA -> BGRA) <numChannels, channelA, channelB> ... requires 8-bit channels
+	template <uint8_t numChannels, uint8_t channelA, uint8_t channelB>
+    void swizzleChannels(uint8_t* pixelData, size_t numPixels)
+    {
+	    for (size_t i = 0; i < numPixels; ++i)
+	    {
+		    uint8_t* pixel = &pixelData[i * numChannels];
+		    std::swap(pixel[channelA], pixel[channelB]);
+	    }
+    }
+
+	inline void rgbaToBGRASwizzle(uint8_t* pixelData, size_t numPixels)
+	{
+		swizzleChannels<4, 0, 2>(pixelData, numPixels);
+	}
+
 	inline FColor fLinearColorToFColor(const FLinearColor& color)
 	{
 		return FColor{

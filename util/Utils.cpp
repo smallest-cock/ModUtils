@@ -343,6 +343,39 @@ namespace Format
         }
     }
 
+	std::string toCamelCase(const std::string& str)
+	{
+	    std::string result;
+	    bool capitalizeNext = false;
+
+	    for (char ch : str)
+	    {
+		    if (ch == ' ' || ch == '_')
+		    {
+			    capitalizeNext = true;
+		    }
+		    else
+		    {
+			    if (result.empty())
+			    {
+				    // Always lowercase the first character
+				    result += std::tolower(ch);
+			    }
+			    else if (capitalizeNext)
+			    {
+				    result += std::toupper(ch);
+				    capitalizeNext = false;
+			    }
+			    else
+			    {
+				    result += std::tolower(ch);
+			    }
+		    }
+	    }
+
+		return result;
+	}
+
     std::string ToLower(std::string str)
     {
         std::transform(str.begin(), str.end(), str.begin(), tolower);

@@ -2,6 +2,7 @@
 #include "pch.h"
 #include <random>
 #include <codecvt>
+#include <unordered_set>
 
 namespace Format
 {
@@ -48,7 +49,7 @@ namespace Format
 
 	bool check_string_using_filters(const std::string& input, const std::vector<std::string>& whitelist_terms, const std::vector<std::string>& blacklist_terms);
 
-
+	std::string toCamelCase(const std::string& str);
 	std::string ToLower(std::string str);
 	void ToLowerInline(std::string& str);
 	std::string RemoveAllChars(std::string str, char character);
@@ -73,6 +74,41 @@ namespace Files
 		std::string name;
 		fs::path path;
 	};
+
+	constexpr std::array<std::string_view, 4> acceptableFormats = { ".png", ".jpg", ".jpeg", ".bmp" };
+
+	template <typename MapType>
+	void FindImages(const fs::path& directory, MapType& imageMap, bool useStemFilename = false)
+	{
+		static const std::unordered_set<std::string_view> formatSet{ acceptableFormats.begin(), acceptableFormats.end() };
+
+		for (const auto& entry : fs::recursive_directory_iterator(directory))
+		{
+			if (!entry.is_regular_file())
+				continue;
+
+			auto extensionLower = Format::ToLower(entry.path().extension().string());
+			if (formatSet.contains(extensionLower))
+			{
+			    std::string filename =
+			        useStemFilename ? entry.path().stem().string() : entry.path().filename().string();
+				imageMap[filename] = entry.path();
+			}
+		}
+	}
+
+	template <typename MapType>
+	void FindPngImages(const fs::path& directory, MapType& imageMap)
+	{
+		for (const auto& entry : fs::recursive_directory_iterator(directory))
+		{
+			if (entry.is_regular_file() && entry.path().extension() == ".png")
+			{
+				std::string filename = entry.path().stem().string();
+			    imageMap[filename]   = entry.path();
+			}
+		}
+	}
 
 	void FindPngImages(const fs::path& directory, std::unordered_map<std::string, fs::path>& imageMap);
 	void FindPngImages(const fs::path& directory, std::vector<ImageInfo>& image_info);

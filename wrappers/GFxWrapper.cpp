@@ -71,7 +71,7 @@ bool GfxWrapper::unable_to_set_value(const std::string& val_type)
 // setters
 void GfxWrapper::set_string(const std::string& col_name, const std::string& value)
 {
-	set_string(StringUtils::findFName(col_name), StringUtils::newFString(value));
+	set_string(FName::find(col_name), FString::create(value));
 }
 
 void GfxWrapper::set_string(const FName& col_name, const FString& value)
@@ -85,7 +85,7 @@ void GfxWrapper::set_string(const FName& col_name, const FString& value)
 
 void GfxWrapper::set_int(const std::string& col_name, int32_t value)
 {
-	set_int(StringUtils::findFName(col_name), value);
+	set_int(FName::find(col_name), value);
 }
 
 void GfxWrapper::set_int(const FName& col_name, int32_t value)
@@ -99,7 +99,7 @@ void GfxWrapper::set_int(const FName& col_name, int32_t value)
 
 void GfxWrapper::set_float(const std::string& col_name, float value)
 {
-	set_float(StringUtils::findFName(col_name), value);
+	set_float(FName::find(col_name), value);
 }
 
 void GfxWrapper::set_float(const FName& col_name, float value)
@@ -113,7 +113,7 @@ void GfxWrapper::set_float(const FName& col_name, float value)
 
 void GfxWrapper::set_bool(const std::string& col_name, bool value)
 {
-	set_bool(StringUtils::findFName(col_name), value);
+	set_bool(FName::find(col_name), value);
 }
 
 void GfxWrapper::set_bool(const FName& col_name, bool value)
@@ -127,7 +127,7 @@ void GfxWrapper::set_bool(const FName& col_name, bool value)
 
 void GfxWrapper::set_texture(const std::string& col_name, UTexture* value)
 {
-	set_texture(StringUtils::findFName(col_name), value);
+	set_texture(FName::find(col_name), value);
 }
 
 void GfxWrapper::set_texture(const FName& col_name, UTexture* value)
@@ -148,7 +148,7 @@ void GfxWrapper::set_color(const std::string& col_name, const GUI::Colors::Color
 	val.Type = static_cast<uint8_t>(EASType::AS_UInt);
 	val.I = value.GetIntColor();
 
-	datastore->SetASValue(gfx_row->TableName, gfx_row->RowIndex, StringUtils::findFName(col_name), val);
+	datastore->SetASValue(gfx_row->TableName, gfx_row->RowIndex, FName::find(col_name), val);
 }
 
 void GfxWrapper::set_color(const std::string& col_name, const FColor& value)
@@ -161,7 +161,7 @@ void GfxWrapper::set_color(const std::string& col_name, const FColor& value)
 	val.Type = static_cast<uint8_t>(EASType::AS_UInt);
 	val.I = color.GetIntColor();
 
-	datastore->SetASValue(gfx_row->TableName, gfx_row->RowIndex, StringUtils::findFName(col_name), val);
+	datastore->SetASValue(gfx_row->TableName, gfx_row->RowIndex, FName::find(col_name), val);
 }
 
 void GfxWrapper::set_color(const std::string& col_name, const FLinearColor& value)
@@ -174,7 +174,7 @@ void GfxWrapper::set_color(const std::string& col_name, const FLinearColor& valu
 	val.Type = static_cast<uint8_t>(EASType::AS_UInt);
 	val.I = color.GetIntColor();
 
-	datastore->SetASValue(gfx_row->TableName, gfx_row->RowIndex, StringUtils::findFName(col_name), val);
+	datastore->SetASValue(gfx_row->TableName, gfx_row->RowIndex, FName::find(col_name), val);
 }
 
 void GfxWrapper::set_color(const std::string& col_name, int32_t value)
@@ -185,7 +185,7 @@ void GfxWrapper::set_color(const std::string& col_name, int32_t value)
 	val.Type = static_cast<uint8_t>(EASType::AS_UInt);
 	val.I = value;
 
-	datastore->SetASValue(gfx_row->TableName, gfx_row->RowIndex, StringUtils::findFName(col_name), val);
+	datastore->SetASValue(gfx_row->TableName, gfx_row->RowIndex, FName::find(col_name), val);
 }
 
 
@@ -194,7 +194,7 @@ void GfxWrapper::set_color(const std::string& col_name, int32_t value)
 // getters
 std::string GfxWrapper::get_string(const std::string& col_name)
 {
-	return get_string(StringUtils::findFName(col_name));
+	return get_string(FName::find(col_name));
 }
 
 std::string GfxWrapper::get_string(const FName& col_name)
@@ -205,7 +205,7 @@ std::string GfxWrapper::get_string(const FName& col_name)
 
 int GfxWrapper::get_int(const std::string& col_name)
 {
-	return get_int(StringUtils::findFName(col_name));
+	return get_int(FName::find(col_name));
 }
 
 int GfxWrapper::get_int(const FName& col_name)
@@ -216,7 +216,7 @@ int GfxWrapper::get_int(const FName& col_name)
 
 float GfxWrapper::get_float(const std::string& col_name)
 {
-	return get_float(StringUtils::findFName(col_name));
+	return get_float(FName::find(col_name));
 }
 
 float GfxWrapper::get_float(const FName& col_name)
@@ -227,7 +227,7 @@ float GfxWrapper::get_float(const FName& col_name)
 
 bool GfxWrapper::get_bool(const std::string& col_name)
 {
-	return get_bool(StringUtils::findFName(col_name));
+	return get_bool(FName::find(col_name));
 }
 
 bool GfxWrapper::get_bool(const FName& col_name)
@@ -238,7 +238,7 @@ bool GfxWrapper::get_bool(const FName& col_name)
 
 UTexture* GfxWrapper::get_texture(const std::string& col_name)
 {
-	return get_texture(StringUtils::findFName(col_name));
+	return get_texture(FName::find(col_name));
 }
 
 UTexture* GfxWrapper::get_texture(const FName& col_name)

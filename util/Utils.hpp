@@ -293,6 +293,22 @@ public:
 // Inline helper functions for different color type conversions.
 namespace Colors
 {
+	inline uint8_t toByte(float val)
+	{
+	    return static_cast<uint8_t>(std::clamp(std::round(val * 255.0f), 0.0f, 255.0f));
+	}
+
+	// assumes an RGBA float array
+	inline FColor toFColor(const float (&col)[4])
+	{
+	    FColor fCol{};
+	    fCol.R = toByte(col[0]);
+	    fCol.G = toByte(col[1]);
+	    fCol.B = toByte(col[2]);
+	    fCol.A = toByte(col[3]);
+	    return fCol;
+	}
+
 	FLinearColor CvarColorToFLinearColor(const LinearColor& cvarColor);
 	int32_t FLinearColorToInt(const FLinearColor& color);
 	std::string fcolorToHexRGBA(const FColor& col);

@@ -281,6 +281,7 @@ private:
 public:
 	static Color GetByte();
 	static CoolerLinearColor GetLinear();
+	static FLinearColor GetFLinear();
 	static int32_t GetDecimal();
 	static void Reset();
 	static void OnTick();
@@ -293,6 +294,15 @@ public:
 // Inline helper functions for different color type conversions.
 namespace Colors
 {
+	inline std::string logColor(const FLinearColor& col)
+	{
+	    return std::format("R:{}-G:{}-B:{}-A:{}", col.R, col.G, col.B, col.A);
+	}
+	inline std::string logColor(const FColor& col)
+	{
+	    return std::format("R:{}-G:{}-B:{}-A:{}", col.R, col.G, col.B, col.A);
+	}
+
 	inline uint8_t toByte(float val)
 	{
 	    return static_cast<uint8_t>(std::clamp(std::round(val * 255.0f), 0.0f, 255.0f));
@@ -310,6 +320,7 @@ namespace Colors
 	}
 
 	FLinearColor CvarColorToFLinearColor(const LinearColor& cvarColor);
+	uint32_t CvarColorToInt(const LinearColor& cvarColor);
 	int32_t FLinearColorToInt(const FLinearColor& color);
 	std::string fcolorToHexRGBA(const FColor& col);
 	FColor hexRGBAtoFColor(const std::string& hex);

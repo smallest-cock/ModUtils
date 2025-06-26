@@ -797,11 +797,15 @@ namespace Colors
 {
 	FLinearColor CvarColorToFLinearColor(const LinearColor& cvarColor)
 	{
-		LinearColor fixedColor = cvarColor / 255;
+		LinearColor fixedCol = cvarColor / 255;
 
-		return FLinearColor{ fixedColor.R, fixedColor.G, fixedColor.B, fixedColor.A };
+		return FLinearColor{ fixedCol.R, fixedCol.G, fixedCol.B, fixedCol.A };
 	}
-
+    
+	uint32_t CvarColorToInt(const LinearColor& col)
+	{
+	    return FLinearColorToInt(CvarColorToFLinearColor(col));
+	}
 
 	int32_t FLinearColorToInt(const FLinearColor& color)
 	{
@@ -1145,6 +1149,16 @@ Color GRainbowColor::GetByte()
 CoolerLinearColor GRainbowColor::GetLinear()
 {
 	return LinearRainbow;
+}
+
+FLinearColor GRainbowColor::GetFLinear()
+{
+	return {
+	    LinearRainbow.R,
+	    LinearRainbow.G,
+	    LinearRainbow.B,
+	    LinearRainbow.A
+	};
 }
 
 int32_t GRainbowColor::GetDecimal() {

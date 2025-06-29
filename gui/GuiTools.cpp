@@ -101,15 +101,6 @@ namespace GUI
 		ImGui::EndChild();
 	}
 
-	void SettingsFooter(const char* id, const ImVec2& size, std::shared_ptr<FooterLinks> footer_links, bool showBorder)
-	{
-		if (ImGui::BeginChild(id, size, showBorder))
-		{
-			footer_links->display();
-		}
-		ImGui::EndChild();
-	}
-
 	void OldSettingsFooter(const char* id, const ImVec2& size, bool showBorder)
 	{
 		if (ImGui::BeginChild(id, size, showBorder))

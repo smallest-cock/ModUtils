@@ -66,6 +66,17 @@ namespace Format
 	uint64_t HexToDecimal(const std::string& hexStr);
 }
 
+namespace Helper
+{
+	class ScopedFlag
+	{
+		bool& m_flag;
+	
+	public:
+		ScopedFlag(bool& f) : m_flag(f) { m_flag = true; }
+		~ScopedFlag() { m_flag = false; }
+	};
+}
 
 namespace Files 
 {

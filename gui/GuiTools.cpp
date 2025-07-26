@@ -84,6 +84,12 @@ namespace GUI
 		ImGui::SetCursorPosX(horizontalSpacingPx);
 	}
 
+	void ToolTip(const char* tip)
+	{
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip(tip);
+	}
+
 
 	void SettingsHeader(const char* id, const char* pluginVersion, const ImVec2& size, bool showBorder)
 	{

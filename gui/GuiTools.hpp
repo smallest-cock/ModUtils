@@ -13,7 +13,7 @@ namespace GUI
 	void Spacing(int amount = 1);
 	void SameLineSpacing_relative(float horizontalSpacingPx);
 	void SameLineSpacing_absolute(float horizontalSpacingPx);
-
+	void ToolTip(const char* tip);
 
 	// scoped version of BeginChild/EndChild
 	// Usage: GUI::ScopedChild c{ "SomeLabel", ... };

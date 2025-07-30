@@ -545,7 +545,7 @@ namespace Files
 
 		if (!file.is_open())
 		{
-			LOG("Error: Unable to open file {}", filePath.string());
+			LOGERROR("Unable to open file {}", filePath.string());
 			return;
 		}
 
@@ -554,7 +554,7 @@ namespace Files
 
 		if (!tempFile.is_open())
 		{
-			LOG("Error: Unable to create temporary file");
+			LOGERROR("Unable to create temporary file");
 			return;
 		}
 
@@ -655,7 +655,7 @@ namespace PluginUpdates
 			{
 				if (code != 200)
 				{
-					LOG("ERROR: Check for update HTTP Request Failed!");
+					LOGERROR("Check for update HTTP Request Failed!");
 					return;
 				}
 

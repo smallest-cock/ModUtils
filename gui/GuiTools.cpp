@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "GuiTools.hpp"
+#include "../util/Utils.hpp"
 
 
 namespace GUI
@@ -60,7 +61,7 @@ namespace GUI
 		if (ImGui::IsItemHovered())
 		{
 			ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
-			ImGui::SetTooltip(url);
+			ImGui::SetTooltip("%s", url);
 		}
 	}
 
@@ -87,7 +88,7 @@ namespace GUI
 	void ToolTip(const char* tip)
 	{
 		if (ImGui::IsItemHovered())
-			ImGui::SetTooltip(tip);
+			ImGui::SetTooltip("%s", tip);
 	}
 
 
@@ -101,7 +102,7 @@ namespace GUI
 
 			Spacing(3);
 
-			ImGui::Text(pluginVersion);
+			ImGui::Text("%s", pluginVersion);
 			ImGui::Separator();
 		}
 		ImGui::EndChild();
@@ -132,11 +133,11 @@ namespace GUI
 	{
 		Spacing(4);
 
-		ImGui::TextColored(text_color, text);
+		ImGui::TextColored(text_color, "%s", text);
 
 		Spacing(3);
 
-		ImGui::Text(plugin_version);
+		ImGui::Text("%s", plugin_version);
 
 		plugin_update_message();
 

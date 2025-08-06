@@ -23,6 +23,7 @@ const ImVec4 RealDarkGreen = {0.1f, 0.3f, 0.1f, 1.0f};
 const ImVec4 Gray          = {0.4f, 0.4f, 0.4f, 1.0f};
 const ImVec4 LightOrange   = {1.0f, 0.6f, 0.2f, 1.0f};
 const ImVec4 VividOrange   = {1.0f, 0.4f, 0.0f, 1.0f};
+const ImVec4 Orange        = {1.0f, 0.6f, 0.0f, 1.0f};
 } // namespace Colors
 
 void open_link(const char* url)

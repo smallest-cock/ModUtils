@@ -127,6 +127,7 @@ extern const ImVec4 RealDarkGreen;
 
 extern const ImVec4 Gray;
 
+extern const ImVec4 Orange;
 extern const ImVec4 LightOrange;
 extern const ImVec4 VividOrange;
 } // namespace Colors

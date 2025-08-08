@@ -1191,8 +1191,6 @@ void GRainbowColor::TickRGB(int speed, int defaultSpeed)
 	else if (speed >= defaultSpeed)
 	{
 		for (int i = 0; i < (speed - defaultSpeed + 1); ++i)
-		{
 			OnTick();
-		}
 	}
 }

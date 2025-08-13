@@ -119,6 +119,32 @@ public:
 	ScopedFlag(bool& f) : m_flag(f) { m_flag = true; }
 	~ScopedFlag() { m_flag = false; }
 };
+
+class ScopedBannerLog
+{
+	char     m_fill;
+	uint32_t m_totalLength = 0;
+
+public:
+	ScopedBannerLog(const std::string& label, char fill = '=', size_t totalWidth = 50) : m_fill(fill)
+	{
+		if (totalWidth < label.size() + 2)
+			totalWidth = label.size() + 2;
+
+		size_t coreLength   = label.size() + 2;
+		size_t sideLen      = (totalWidth - coreLength) / 2;
+		size_t sideLenRight = totalWidth - coreLength - sideLen;
+
+		std::string output(sideLen, m_fill);
+		output += " " + label + " ";
+		output.append(sideLenRight, m_fill);
+
+		m_totalLength = static_cast<uint32_t>(output.size());
+		LOG(output);
+	}
+
+	~ScopedBannerLog() { LOG(std::string(m_totalLength, m_fill)); }
+};
 } // namespace Helper
 
 namespace Files

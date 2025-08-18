@@ -488,6 +488,17 @@ uint64_t HexToDecimal(const std::string& hexStr)
 }
 } // namespace Format
 
+namespace Math
+{
+float distanceSquared(const FVector& a, const FVector& b)
+{
+	const float dx = a.X - b.X;
+	const float dy = a.Y - b.Y;
+	const float dz = a.Z - b.Z;
+	return dx * dx + dy * dy + dz * dz;
+}
+} // namespace Math
+
 namespace Files
 {
 void FindPngImages(const fs::path& directory, std::unordered_map<std::string, fs::path>& imageMap)
@@ -632,6 +643,7 @@ bool write_json(const fs::path& file_path, const json& j)
 		else
 		{
 			LOG("[ERROR] Couldn't open file for writing: {}", file_path.string());
+			return false;
 		}
 
 		return true;

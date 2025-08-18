@@ -109,6 +109,11 @@ std::string ColorToHex(float colorsArray[3], bool bNotation);
 uint64_t    HexToDecimal(const std::string& hexStr);
 } // namespace Format
 
+namespace Math
+{
+float distanceSquared(const FVector& a, const FVector& b);
+} // namespace Math
+
 namespace Helper
 {
 class ScopedFlag

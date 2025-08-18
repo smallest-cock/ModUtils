@@ -703,8 +703,8 @@ void check_for_updates(const std::string& mod_name, const std::string& current_v
 			    LOG("JSON Parsing Error!");
 		    }
 
-		    LOG("mod_name: {}", mod_name);
-		    LOG("current_version: {}", current_version);
+		    LOG("Mod name: {}", mod_name);
+		    LOG("Current version: {}", current_version);
 		    LOG("Body result: {}", result);
 	    });
 }

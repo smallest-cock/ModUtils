@@ -490,6 +490,7 @@ uint64_t HexToDecimal(const std::string& hexStr)
 
 namespace Math
 {
+#ifndef NO_RLSDK
 float distanceSquared(const FVector& a, const FVector& b)
 {
 	const float dx = a.X - b.X;
@@ -497,6 +498,7 @@ float distanceSquared(const FVector& a, const FVector& b)
 	const float dz = a.Z - b.Z;
 	return dx * dx + dy * dy + dz * dz;
 }
+#endif // NO_RLSDK
 } // namespace Math
 
 namespace Files
@@ -807,6 +809,7 @@ CreateProcessResult create_process_from_command(const std::string& command)
 }
 } // namespace Process
 
+#ifndef NO_RLSDK
 namespace Colors
 {
 // returns a AARRGGBB packed 32-bit int
@@ -1206,3 +1209,4 @@ void GRainbowColor::TickRGB(int speed, int defaultSpeed)
 			OnTick();
 	}
 }
+#endif // NO_RLSDK

@@ -51,6 +51,7 @@ struct ScopedIndent
 
 namespace Colors
 {
+#ifndef NO_RLSDK
 struct Color
 {
 	float r, g, b, a;
@@ -107,6 +108,7 @@ struct Color
 		return col;
 	}
 };
+#endif // NO_RLSDK
 
 extern const ImVec4 White;
 extern const ImVec4 Red;

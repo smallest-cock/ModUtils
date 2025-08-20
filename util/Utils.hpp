@@ -2,6 +2,35 @@
 #include "pch.h"
 #include <unordered_set>
 
+#ifdef NO_RLSDK
+namespace StringUtils
+{
+inline std::string ToString(const std::wstring& str)
+{
+	if (str.empty())
+		return "";
+	int32_t size = WideCharToMultiByte(CP_UTF8, 0, str.data(), -1, nullptr, 0, nullptr, nullptr);
+	if (size <= 0)
+		return "";
+	std::string return_str(size - 1, 0);
+	WideCharToMultiByte(CP_UTF8, 0, str.data(), -1, return_str.data(), size, nullptr, nullptr);
+	return return_str;
+}
+
+inline std::wstring ToWideString(const std::string& str)
+{
+	if (str.empty())
+		return L"";
+	int32_t size = MultiByteToWideChar(CP_UTF8, 0, str.data(), -1, nullptr, 0);
+	if (size <= 0)
+		return L"";
+	std::wstring return_str(size - 1, 0);
+	MultiByteToWideChar(CP_UTF8, 0, str.data(), -1, return_str.data(), size);
+	return return_str;
+}
+} // namespace StringUtils
+#endif
+
 namespace Format
 {
 constexpr std::array<char, 53> letters = {'a',
@@ -111,7 +140,9 @@ uint64_t    HexToDecimal(const std::string& hexStr);
 
 namespace Math
 {
+#ifndef NO_RLSDK
 float distanceSquared(const FVector& a, const FVector& b);
+#endif
 } // namespace Math
 
 namespace Helper
@@ -244,6 +275,7 @@ void terminate_created_process(ProcessHandles& pi);
 CreateProcessResult create_process_from_command(const std::string& command);
 } // namespace Process
 
+#ifndef NO_RLSDK
 class Color
 {
 public:
@@ -345,9 +377,8 @@ template <> struct hash<CoolerLinearColor>
 class GRainbowColor
 {
 private:
-	static inline Color             ByteRainbow   = Color(0, 0, 255, 255);
-	static inline CoolerLinearColor LinearRainbow = CoolerLinearColor(0.0f, 0.0f, 1.0f, 1.0f);
-	static inline uint32_t          tickCounter   = 0; // custom shit
+	static inline Color    ByteRainbow = Color(0, 0, 255, 255);
+	static inline uint32_t tickCounter = 0; // custom shit
 
 public:
 	static Color             GetByte();
@@ -372,8 +403,6 @@ FColor      hexToFColor(const std::string& hex);
 inline std::string logColor(const FLinearColor& col) { return std::format("R:{}-G:{}-B:{}-A:{}", col.R, col.G, col.B, col.A); }
 inline std::string logColor(const FColor& col) { return std::format("R:{}-G:{}-B:{}-A:{}", col.R, col.G, col.B, col.A); }
 
-inline uint8_t toByte(float val) { return static_cast<uint8_t>(std::clamp(std::round(val * 255.0f), 0.0f, 255.0f)); }
-
 // assumes an RGBA float array
 inline FColor toFColor(const float (&col)[4])
 {
@@ -391,18 +420,6 @@ int32_t      FLinearColorToInt(const FLinearColor& color);
 std::string  fcolorToHexRGBA(const FColor& col);
 FColor       hexRGBAtoFColor(const std::string& hex);
 
-// Swizzle pixel data (i.e. RGBA -> BGRA) <numChannels, channelA, channelB> ... requires 8-bit channels
-template <uint8_t numChannels, uint8_t channelA, uint8_t channelB> void swizzleChannels(uint8_t* pixelData, size_t numPixels)
-{
-	for (size_t i = 0; i < numPixels; ++i)
-	{
-		uint8_t* pixel = &pixelData[i * numChannels];
-		std::swap(pixel[channelA], pixel[channelB]);
-	}
-}
-
-inline void rgbaToBGRASwizzle(uint8_t* pixelData, size_t numPixels) { swizzleChannels<4, 0, 2>(pixelData, numPixels); }
-
 inline FColor fLinearColorToFColor(const FLinearColor& color)
 {
 	return FColor{static_cast<uint8_t>(color.B * 255),
@@ -418,6 +435,20 @@ inline FLinearColor fColorToFLinearColor(const FColor& color)
 	    static_cast<float>(color.B) / 255.0f,
 	    static_cast<float>(color.A) / 255.0f}; // RGBA
 }
+
+inline uint8_t toByte(float val) { return static_cast<uint8_t>(std::clamp(std::round(val * 255.0f), 0.0f, 255.0f)); }
+
+// Swizzle pixel data (i.e. RGBA -> BGRA) <numChannels, channelA, channelB> ... requires 8-bit channels
+template <uint8_t numChannels, uint8_t channelA, uint8_t channelB> void swizzleChannels(uint8_t* pixelData, size_t numPixels)
+{
+	for (size_t i = 0; i < numPixels; ++i)
+	{
+		uint8_t* pixel = &pixelData[i * numChannels];
+		std::swap(pixel[channelA], pixel[channelB]);
+	}
+}
+
+inline void rgbaToBGRASwizzle(uint8_t* pixelData, size_t numPixels) { swizzleChannels<4, 0, 2>(pixelData, numPixels); }
 
 // Color to Decimal/Base10
 inline uint32_t HexToDecimal(std::string hexStr) { return Color(hexStr).ToDecimal(); }
@@ -441,3 +472,5 @@ inline CoolerLinearColor HexToLinear(std::string hexStr) { return CoolerLinearCo
 inline Color             LinearToColor(const CoolerLinearColor& linearColor) { return linearColor.ToColor(); }
 inline CoolerLinearColor ColorToLinear(const Color& color) { return color.ToLinear(); }
 } // namespace Colors
+
+#endif // NO_RLSDK

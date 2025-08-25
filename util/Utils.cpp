@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Utils.hpp"
+#include <optional>
 #include <random>
+#include <regex>
 
 namespace Format
 {
@@ -501,6 +503,22 @@ float distanceSquared(const FVector& a, const FVector& b)
 #endif // NO_RLSDK
 } // namespace Math
 
+namespace Helper
+{
+std::optional<json> getJsonFromStr(const std::string& str)
+{
+	try
+	{
+		return json::parse(str);
+	}
+	catch (...)
+	{
+		LOGERROR("Unable to parse JSON!");
+		return std::nullopt;
+	}
+}
+} // namespace Helper
+
 namespace Files
 {
 void FindPngImages(const fs::path& directory, std::unordered_map<std::string, fs::path>& imageMap)
@@ -656,59 +674,214 @@ bool write_json(const fs::path& file_path, const json& j)
 		return false;
 	}
 }
+
+void appendLineIfNotExist(const fs::path& file, const std::string& line)
+{
+	const std::string        fileName = file.filename().string();
+	std::vector<std::string> lines;
+
+	// Read file if it exists
+	if (fs::exists(file))
+	{
+		std::ifstream in(file);
+		std::string   existingLine;
+		while (std::getline(in, existingLine))
+		{
+			// normalize whitespace and case if you want
+			if (existingLine == line)
+			{
+				LOG("{} already contains line: \"{}\"", fileName, line);
+				return; // bail out if found
+			}
+			lines.push_back(existingLine);
+		}
+		in.close();
+	}
+	else
+		LOG("WARNING: File doesn't exist: \"{}\"", file.string());
+
+	// Add line
+	lines.push_back(line);
+
+	// Write back the file
+	{
+		std::ofstream out(file, std::ios::trunc);
+		for (auto& line : lines)
+			out << line << "\n";
+	}
+
+	LOG("Added line to {}: \"{}\"", fileName, line);
+}
 } // namespace Files
 
 namespace PluginUpdates
 {
-PluginUpdateResponse update_response;
-std::mutex           update_mutex;
 
-void check_for_updates(const std::string& mod_name, const std::string& current_version)
+PluginUpdateInfo updateInfo; // global state for all the PluginUpdates:: functions. Can turn this whole thang into a class ngl ong frfr
+std::mutex       updateMutex;
+
+/*
+    - This update check only works if the github release name contains the version number. Like: "v1.2.3" or "Custom Thing v2.1.4" etc.
+*/
+void check_for_updates(const std::string& modName, const std::string& currentVersion, const std::string& assetName)
 {
 	CurlRequest req;
-	req.url = "https://raw.githubusercontent.com/smallest-cock/plugin-data/main/versions.json";
-
+	req.url = std::format("https://api.github.com/repos/smallest-cock/{}/releases/latest", modName);
 	HttpWrapper::SendCurlRequest(req,
-	    [mod_name, current_version](int code, std::string result)
+	    [modName, currentVersion, assetName](int code, std::string result)
 	    {
 		    if (code != 200)
 		    {
-			    LOGERROR("Check for update HTTP Request Failed!");
+			    LOGERROR("Update check HTTP request failed!");
 			    return;
 		    }
 
-		    try
-		    {
-			    auto        response_json       = json::parse(result);
-			    auto        plugin_version_data = response_json[mod_name];
-			    std::string latest_version      = plugin_version_data["version"];
-			    std::string release_url         = plugin_version_data["releasePage"];
+		    auto responseJsonOpt = Helper::getJsonFromStr(result);
+		    if (!responseJsonOpt)
+			    return;
 
-			    {
-				    std::lock_guard<std::mutex> lock(update_mutex);
-				    update_response.latest_version = latest_version;
-				    update_response.release_url    = release_url;
-				    update_response.out_of_date    = (current_version != latest_version);
-			    }
+		    std::string assetFileName = (assetName.empty() ? modName : assetName) + ".zip";
+		    auto        updateInfoOpt = getUpdateInfo(*responseJsonOpt, assetFileName);
+		    if (!updateInfoOpt)
+			    return;
 
-			    if (current_version != latest_version)
-			    {
-				    LOG("New version available: {}", latest_version);
-			    }
-			    else
-			    {
-				    LOG("Plugin is up to date: {}", current_version);
-			    }
-		    }
-		    catch (...)
+		    PluginUpdateInfo& info = *updateInfoOpt;
+		    info.pluginName        = modName;
+		    info.outOfDate         = currentVersion != info.latestVersion;
+
 		    {
-			    LOG("JSON Parsing Error!");
+			    std::lock_guard<std::mutex> lock(updateMutex);
+			    updateInfo = info;
 		    }
 
-		    LOG("Mod name: {}", mod_name);
-		    LOG("Current version: {}", current_version);
-		    LOG("Body result: {}", result);
+		    if (info.outOfDate)
+			    LOG("New version available: {}", info.latestVersion);
+		    else
+			    LOG("Plugin is up to date: {}", currentVersion);
 	    });
+}
+
+// the high-level plugin-facing API
+void installUpdate(const std::shared_ptr<CVarManagerWrapper>& cm, const std::shared_ptr<GameWrapper>& gw)
+{
+	auto executePluginUpdateCommand = [cm]()
+	{ cm->executeCommand(std::format("pluginupdater_update {} {}", updateInfo.pluginName, updateInfo.assetDownloadUrl)); };
+
+	// check if PluginUpdater's cvar exists (aka if the plugin is loaded)
+	if (!cm->getCvar("pluginupdater_unload_delay"))
+	{
+		downloadAndInstallUpdaterPlugin(gw, cm, executePluginUpdateCommand);
+		return;
+	}
+
+	executePluginUpdateCommand();
+}
+
+void downloadAndInstallUpdaterPlugin(
+    std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, const std::function<void()> afterInstalledCallback)
+{
+	// get latest PluginUpdater release info using github API
+	CurlRequest req;
+	req.url = "https://api.github.com/repos/smallest-cock/PluginUpdater/releases/latest";
+	HttpWrapper::SendCurlRequest(req,
+	    [gw, cm, afterInstalledCallback](int code, std::string result)
+	    {
+		    if (code != 200)
+		    {
+			    LOGERROR("Invalid HTTP code: {}", code);
+			    return;
+		    }
+
+		    const std::string updaterPluginName = "PluginUpdater";
+		    const std::string assetName         = updaterPluginName + ".dll";
+
+		    auto urlOpt = getAssetDownloadUrl(result, assetName);
+		    if (!urlOpt)
+			    return;
+
+		    fs::path tempDir = fs::temp_directory_path() / updaterPluginName;
+		    fs::create_directories(tempDir);
+		    fs::path downloadFile = tempDir / assetName;
+
+		    const fs::path pluginsFolder = gw->GetBakkesModPath() / "plugins";
+		    const fs::path configFile    = gw->GetBakkesModPath() / "cfg" / "plugins.cfg";
+
+		    // download PluginUpdater DLL from latest release
+		    CurlRequest req;
+		    req.url  = *urlOpt;
+		    req.verb = "GET";
+		    HttpWrapper::SendCurlRequest(req,
+		        downloadFile.wstring(),
+		        [pluginsFolder, configFile, updaterPluginName, cm, afterInstalledCallback](int httpCode, std::wstring filePath)
+		        {
+			        if (httpCode != 200)
+			        {
+				        LOGERROR("Invalid HTTP code: {}", httpCode);
+				        return;
+			        }
+
+			        // copy file to plugins folder
+			        fs::path downloadedPath{filePath};
+			        fs::copy(downloadedPath, pluginsFolder, fs::copy_options::overwrite_existing);
+
+			        // delete file in temp directory
+			        fs::remove_all(downloadedPath.parent_path());
+
+			        // Add line to plugins.cfg
+			        const auto newline = std::format("plugin load {}", Format::ToLower(updaterPluginName));
+			        Files::appendLineIfNotExist(configFile, newline);
+
+			        // this sleep aint needed if "plugin load X" blocks until plugin's onLoad is complete. ig we gotta test
+			        cm->executeCommand("sleep 1000");
+
+			        // send update request
+			        afterInstalledCallback();
+		        });
+	    });
+}
+
+std::optional<PluginUpdateInfo> getUpdateInfo(const json& releaseJson, const std::string& assetName)
+{
+	PluginUpdateInfo info{};
+
+	auto versionStr = getVersionStr(releaseJson);
+	if (!versionStr)
+		return std::nullopt;
+	info.latestVersion = *versionStr;
+
+	auto assetDownloadUrl = getAssetDownloadUrl(releaseJson, assetName);
+	if (!assetDownloadUrl)
+		return std::nullopt;
+	info.assetDownloadUrl = *assetDownloadUrl;
+
+	info.releaseUrl = releaseJson["html_url"].get<std::string>();
+	return info;
+}
+
+std::optional<std::string> getAssetDownloadUrl(const json& releaseJson, const std::string& assetName)
+{
+	for (const auto& asset : releaseJson["assets"])
+	{
+		if (asset["name"] == assetName)
+			return asset["browser_download_url"].get<std::string>();
+	}
+	return std::nullopt;
+}
+
+std::optional<std::string> getVersionStr(const json& releaseJson)
+{
+	constexpr auto          versionPattern = R"(v?(\d+\.\d+\.\d+))";
+	static const std::regex re{versionPattern};
+	std::smatch             match;
+
+	auto releaseName = releaseJson["name"].get<std::string>();
+	if (std::regex_search(releaseName, match, re))
+		return match[1].str();
+	else
+	{
+		LOGERROR("Release name \"{}\" doesn't match regex patten: \"{}\"", releaseName, versionPattern);
+		return std::nullopt;
+	}
 }
 } // namespace PluginUpdates
 

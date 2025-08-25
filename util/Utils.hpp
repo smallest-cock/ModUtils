@@ -181,6 +181,8 @@ public:
 
 	~ScopedBannerLog() { LOG(std::string(m_totalLength, m_fill)); }
 };
+
+std::optional<json> getJsonFromStr(const std::string& str);
 } // namespace Helper
 
 namespace Files
@@ -232,21 +234,39 @@ void FilterLinesInFile(const fs::path& filePath, const std::string& startString)
 std::string get_text_content(const fs::path& file_path);
 json        get_json(const fs::path& file_path);
 bool        write_json(const fs::path& file_path, const json& j);
+
+void appendLineIfNotExist(const fs::path& file, const std::string& line);
 } // namespace Files
 
 namespace PluginUpdates
 {
-struct PluginUpdateResponse
+struct PluginInfo
 {
-	bool        out_of_date = false;
-	std::string latest_version;
-	std::string release_url;
+	std::string name;
+	std::string currentVersionStr;
 };
 
-extern PluginUpdateResponse update_response;
-extern std::mutex           update_mutex;
+struct PluginUpdateInfo
+{
+	std::string pluginName;
+	std::string latestVersion;
+	std::string releaseUrl;
+	std::string assetDownloadUrl;
+	bool        outOfDate = false;
+};
 
-void check_for_updates(const std::string& mod_name, const std::string& current_version);
+// extern PluginUpdateResponse update_response;
+extern PluginUpdateInfo updateInfo;
+extern std::mutex       updateMutex;
+
+void check_for_updates(const std::string& modName, const std::string& currentVersion, const std::string& assetName = "");
+void downloadAndInstallUpdaterPlugin(
+    std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, const std::function<void()> afterInstalledCallback);
+void installUpdate(const std::shared_ptr<CVarManagerWrapper>& cm, const std::shared_ptr<GameWrapper>& gw);
+
+std::optional<PluginUpdateInfo> getUpdateInfo(const json& releaseJson, const std::string& assetName);
+std::optional<std::string>      getAssetDownloadUrl(const json& releaseJson, const std::string& assetName);
+std::optional<std::string>      getVersionStr(const json& releaseJson);
 } // namespace PluginUpdates
 
 namespace Process

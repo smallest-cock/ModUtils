@@ -1,4 +1,3 @@
-#include "BakkesmodPluginTemplate/IMGUI/imgui.h"
 #include "pch.h"
 #include "GuiTools.hpp"
 #include "../util/Utils.hpp"
@@ -137,7 +136,12 @@ void OldSettingsFooter(const char* id, const ImVec2& size, bool showBorder)
 	ImGui::EndChild();
 }
 
-void alt_settings_header(const char* text, const char* plugin_version, const ImVec4& text_color)
+void alt_settings_header(const char*           text,
+    const char*                                currentPluginVersion,
+    const std::shared_ptr<GameWrapper>&        gw,
+    const std::shared_ptr<CVarManagerWrapper>& cm,
+    bool                                       isPluginUpdater,
+    const ImVec4&                              text_color)
 {
 	Spacing(4);
 
@@ -145,9 +149,9 @@ void alt_settings_header(const char* text, const char* plugin_version, const ImV
 
 	Spacing(3);
 
-	ImGui::Text("%s", plugin_version);
+	ImGui::Text("%s", currentPluginVersion);
 
-	plugin_update_message();
+	plugin_update_message(gw, cm, isPluginUpdater);
 
 	ImGui::Separator();
 }
@@ -167,33 +171,40 @@ void alt_settings_footer(const char* text, const char* url, const ImVec4& text_c
 	ImGui::SetWindowFontScale(1); // undo font scale modification, so it doesnt affect the rest of the UI
 }
 
-void plugin_update_message()
+void plugin_update_message(const std::shared_ptr<GameWrapper>& gw, const std::shared_ptr<CVarManagerWrapper>& cm, bool isPluginUpdater)
 {
-	PluginUpdates::PluginUpdateResponse update_status;
+	PluginUpdates::PluginUpdateInfo updateStatus;
 
 	{
-		std::lock_guard<std::mutex> lock(PluginUpdates::update_mutex);
-		update_status = PluginUpdates::update_response;
+		std::lock_guard<std::mutex> lock(PluginUpdates::updateMutex);
+		updateStatus = PluginUpdates::updateInfo;
 	}
 
-	if (update_status.out_of_date)
+	if (updateStatus.outOfDate)
 	{
 		GUI::SameLineSpacing_relative(20);
 
 		ImGui::TextColored(GUI::Colors::Red, "<------ PLUGIN IS OUT OF DATE!");
-		if (ImGui::IsItemHovered())
-		{
-			ImGui::SetTooltip(
-			    "Using an outdated version can cause features to work incorrectly or even crash the game!\n\n"
-			    "Unfortunately there's no built in auto-update system for plugins that aren't on the BakkesPlugins website :(\n\n"
-			    "So just follow the install steps on the latest GitHub release to update manually\t(it's very easy)");
-		}
+		GUI::ToolTip(isPluginUpdater ? "Click \"Latest version\" and follow the install steps on the GitHub release page\t(it's very easy)"
+		                             : "Using an outdated version can cause features to work incorrectly or even crash the game!\n\n"
+		                               "Click \"Update\" to update the plugin. If that doesn't work for some reason, click \"Latest "
+		                               "version\" and follow the steps on the "
+		                               "GitHub release page\t(it's very easy)");
+
 		GUI::SameLineSpacing_relative(20);
-		ImGui::Text("The latest version is v%s:", update_status.latest_version.c_str());
+		ImGui::Text("The latest version is v%s:", updateStatus.latestVersion.c_str());
 
 		GUI::SameLineSpacing_relative(10);
 
-		GUI::ClickableLink("Update to latest version", update_status.release_url.c_str(), GUI::Colors::Green);
+		if (!isPluginUpdater)
+		{
+			if (ImGui::Button("Update"))
+				PluginUpdates::installUpdate(cm, gw);
+
+			GUI::SameLineSpacing_relative(10);
+		}
+
+		GUI::ClickableLink("Latest version", updateStatus.releaseUrl.c_str(), GUI::Colors::Green);
 	}
 }
 } // namespace GUI

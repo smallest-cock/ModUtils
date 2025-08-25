@@ -397,8 +397,9 @@ template <> struct hash<CoolerLinearColor>
 class GRainbowColor
 {
 private:
-	static inline Color    ByteRainbow = Color(0, 0, 255, 255);
-	static inline uint32_t tickCounter = 0; // custom shit
+	static inline Color             ByteRainbow   = Color(0, 0, 255, 255);
+	static inline CoolerLinearColor LinearRainbow = CoolerLinearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	static inline uint32_t          tickCounter   = 0; // custom shit
 
 public:
 	static Color             GetByte();
@@ -423,17 +424,6 @@ FColor      hexToFColor(const std::string& hex);
 inline std::string logColor(const FLinearColor& col) { return std::format("R:{}-G:{}-B:{}-A:{}", col.R, col.G, col.B, col.A); }
 inline std::string logColor(const FColor& col) { return std::format("R:{}-G:{}-B:{}-A:{}", col.R, col.G, col.B, col.A); }
 
-// assumes an RGBA float array
-inline FColor toFColor(const float (&col)[4])
-{
-	FColor fCol{};
-	fCol.R = toByte(col[0]);
-	fCol.G = toByte(col[1]);
-	fCol.B = toByte(col[2]);
-	fCol.A = toByte(col[3]);
-	return fCol;
-}
-
 FLinearColor CvarColorToFLinearColor(const LinearColor& cvarColor);
 uint32_t     CvarColorToInt(const LinearColor& cvarColor);
 int32_t      FLinearColorToInt(const FLinearColor& color);
@@ -457,6 +447,17 @@ inline FLinearColor fColorToFLinearColor(const FColor& color)
 }
 
 inline uint8_t toByte(float val) { return static_cast<uint8_t>(std::clamp(std::round(val * 255.0f), 0.0f, 255.0f)); }
+
+// assumes an RGBA float array
+inline FColor toFColor(const float (&col)[4])
+{
+	FColor fCol{};
+	fCol.R = toByte(col[0]);
+	fCol.G = toByte(col[1]);
+	fCol.B = toByte(col[2]);
+	fCol.A = toByte(col[3]);
+	return fCol;
+}
 
 // Swizzle pixel data (i.e. RGBA -> BGRA) <numChannels, channelA, channelB> ... requires 8-bit channels
 template <uint8_t numChannels, uint8_t channelA, uint8_t channelB> void swizzleChannels(uint8_t* pixelData, size_t numPixels)

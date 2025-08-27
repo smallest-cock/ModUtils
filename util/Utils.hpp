@@ -240,12 +240,6 @@ void appendLineIfNotExist(const fs::path& file, const std::string& line);
 
 namespace PluginUpdates
 {
-struct PluginInfo
-{
-	std::string name;
-	std::string currentVersionStr;
-};
-
 struct PluginUpdateInfo
 {
 	std::string pluginName;
@@ -255,14 +249,31 @@ struct PluginUpdateInfo
 	bool        outOfDate = false;
 };
 
-// extern PluginUpdateResponse update_response;
-extern PluginUpdateInfo updateInfo;
-extern std::mutex       updateMutex;
+struct PluginUpdaterInfo
+{
+	std::string name                = "PluginUpdater";
+	std::string prettyName          = "Plugin Updater";
+	std::string existenceCheckCvar  = "pluginupdater_unload_delay";
+	std::string updateCommandName   = "pluginupdater_update";
+	std::string assetName           = name + ".dll";
+	std::string latestReleaseApiUrl = "https://api.github.com/repos/smallest-cock/" + name + "/releases/latest";
 
-void check_for_updates(const std::string& modName, const std::string& currentVersion, const std::string& assetName = "");
-void downloadAndInstallUpdaterPlugin(
-    std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, const std::function<void()> afterInstalledCallback);
-void installUpdate(const std::shared_ptr<CVarManagerWrapper>& cm, const std::shared_ptr<GameWrapper>& gw);
+	// derived helpers
+	std::string makeUpdateCmd(const PluginUpdateInfo& updateInfo) const
+	{
+		return std::format("{} {} \"{}\"", updateCommandName, updateInfo.pluginName, updateInfo.assetDownloadUrl);
+	}
+
+	std::string makePluginLoadCmd() const { return std::format("plugin load {}", Format::ToLower(name)); }
+};
+
+extern PluginUpdaterInfo pluginUpdaterInfo;
+extern PluginUpdateInfo  updateInfo;
+extern std::mutex        updateMutex;
+
+void checkForUpdates(const std::string& modName, const std::string& currentVersion, const std::string& assetName = "");
+void installUpdate(const std::shared_ptr<GameWrapper>& gw);
+void downloadAndInstallUpdaterPlugin(std::shared_ptr<GameWrapper> gw, const std::string& updateCmd);
 
 std::optional<PluginUpdateInfo> getUpdateInfo(const json& releaseJson, const std::string& assetName);
 std::optional<std::string>      getAssetDownloadUrl(const json& releaseJson, const std::string& assetName);

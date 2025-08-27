@@ -137,13 +137,12 @@ extern const ImVec4 VividOrange;
 void SettingsHeader(const char* id, const char* pluginVersion, const ImVec2& size, bool showBorder = false);
 void OldSettingsFooter(const char* id, const ImVec2& size, bool showBorder = false);
 
-void alt_settings_header(const char*           text,
-    const char*                                plugin_version,
-    const std::shared_ptr<GameWrapper>&        gw,
-    const std::shared_ptr<CVarManagerWrapper>& cm,
-    bool                                       isPluginUpdater = false,
-    const ImVec4&                              text_color      = Colors::Pinkish);
+void alt_settings_header(const char*    text,
+    const char*                         plugin_version,
+    const std::shared_ptr<GameWrapper>& gw,
+    bool                                isPluginUpdater = false,
+    const ImVec4&                       text_color      = Colors::Pinkish);
 void alt_settings_footer(const char* text, const char* url, const ImVec4& text_color = Colors::Yellow);
 
-void plugin_update_message(const std::shared_ptr<GameWrapper>& gw, const std::shared_ptr<CVarManagerWrapper>& cm, bool isPluginUpdater);
+void plugin_update_message(const std::shared_ptr<GameWrapper>& gw, bool isPluginUpdater);
 } // namespace GUI

@@ -716,23 +716,26 @@ void appendLineIfNotExist(const fs::path& file, const std::string& line)
 
 namespace PluginUpdates
 {
-
-PluginUpdateInfo updateInfo; // global state for all the PluginUpdates:: functions. Can turn this whole thang into a class ngl ong frfr
-std::mutex       updateMutex;
+// global state for all the PluginUpdates:: functions. Can turn all this into a class maybe ong frfr
+PluginUpdaterInfo pluginUpdaterInfo;
+PluginUpdateInfo  updateInfo;
+std::mutex        updateMutex;
 
 /*
+    - Will populate updateInfo with the necessary data
     - This update check only works if the github release name contains the version number. Like: "v1.2.3" or "Custom Thing v2.1.4" etc.
 */
-void check_for_updates(const std::string& modName, const std::string& currentVersion, const std::string& assetName)
+void checkForUpdates(const std::string& modName, const std::string& currentVersion, const std::string& assetName)
 {
 	CurlRequest req;
 	req.url = std::format("https://api.github.com/repos/smallest-cock/{}/releases/latest", modName);
+	LOG("Checking for updates using this URL: {}", req.url);
 	HttpWrapper::SendCurlRequest(req,
 	    [modName, currentVersion, assetName](int code, std::string result)
 	    {
 		    if (code != 200)
 		    {
-			    LOGERROR("Update check HTTP request failed!");
+			    LOGERROR("Invalid HTTP code: {}. Update check failed!", code);
 			    return;
 		    }
 
@@ -761,82 +764,92 @@ void check_for_updates(const std::string& modName, const std::string& currentVer
 	    });
 }
 
-// the high-level plugin-facing API
-void installUpdate(const std::shared_ptr<CVarManagerWrapper>& cm, const std::shared_ptr<GameWrapper>& gw)
+// the high level plugin-facing function
+void installUpdate(const std::shared_ptr<GameWrapper>& gw)
 {
-	auto executePluginUpdateCommand = [cm]()
-	{ cm->executeCommand(std::format("pluginupdater_update {} {}", updateInfo.pluginName, updateInfo.assetDownloadUrl)); };
+	const std::string updateCmd = pluginUpdaterInfo.makeUpdateCmd(updateInfo);
 
 	// check if PluginUpdater's cvar exists (aka if the plugin is loaded)
-	if (!cm->getCvar("pluginupdater_unload_delay"))
+	if (_globalCvarManager->getCvar(pluginUpdaterInfo.existenceCheckCvar))
+		_globalCvarManager->executeCommand(updateCmd);
+	else
 	{
-		downloadAndInstallUpdaterPlugin(gw, cm, executePluginUpdateCommand);
-		return;
+		LOG("{} doesn't seem to be loaded", pluginUpdaterInfo.prettyName);
+		LOG("Attempting to download and install latest version of {}...", pluginUpdaterInfo.prettyName);
+		downloadAndInstallUpdaterPlugin(gw, updateCmd);
 	}
-
-	executePluginUpdateCommand();
 }
 
-void downloadAndInstallUpdaterPlugin(
-    std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, const std::function<void()> afterInstalledCallback)
+void downloadAndInstallUpdaterPlugin(std::shared_ptr<GameWrapper> gw, const std::string& updateCmd)
 {
-	// get latest PluginUpdater release info using github API
+	// set paths
+	const fs::path pluginsFolder = gw->GetBakkesModPath() / "plugins";
+	const fs::path configFile    = gw->GetBakkesModPath() / "cfg" / "plugins.cfg";
+	const fs::path tempDir       = fs::temp_directory_path() / pluginUpdaterInfo.name;
+	fs::create_directories(tempDir);
+	const fs::path downloadFile = tempDir / pluginUpdaterInfo.assetName;
+
+	// get latest release info for PluginUpdater using github API
 	CurlRequest req;
-	req.url = "https://api.github.com/repos/smallest-cock/PluginUpdater/releases/latest";
+	req.url = pluginUpdaterInfo.latestReleaseApiUrl;
 	HttpWrapper::SendCurlRequest(req,
-	    [gw, cm, afterInstalledCallback](int code, std::string result)
+	    [pluginsFolder, configFile, downloadFile, updateCmd](int code, std::string result)
 	    {
-		    if (code != 200)
+		    try
 		    {
-			    LOGERROR("Invalid HTTP code: {}", code);
-			    return;
-		    }
+			    if (code != 200)
+			    {
+				    LOGERROR("Invalid HTTP code: {}", code);
+				    LOGERROR("Response body: {}", result);
+				    return;
+			    }
 
-		    const std::string updaterPluginName = "PluginUpdater";
-		    const std::string assetName         = updaterPluginName + ".dll";
+			    auto responseJsonOpt = Helper::getJsonFromStr(result);
+			    if (!responseJsonOpt)
+				    return;
 
-		    auto urlOpt = getAssetDownloadUrl(result, assetName);
-		    if (!urlOpt)
-			    return;
+			    auto urlOpt = getAssetDownloadUrl(*responseJsonOpt, pluginUpdaterInfo.assetName);
+			    if (!urlOpt)
+				    return;
 
-		    fs::path tempDir = fs::temp_directory_path() / updaterPluginName;
-		    fs::create_directories(tempDir);
-		    fs::path downloadFile = tempDir / assetName;
-
-		    const fs::path pluginsFolder = gw->GetBakkesModPath() / "plugins";
-		    const fs::path configFile    = gw->GetBakkesModPath() / "cfg" / "plugins.cfg";
-
-		    // download PluginUpdater DLL from latest release
-		    CurlRequest req;
-		    req.url  = *urlOpt;
-		    req.verb = "GET";
-		    HttpWrapper::SendCurlRequest(req,
-		        downloadFile.wstring(),
-		        [pluginsFolder, configFile, updaterPluginName, cm, afterInstalledCallback](int httpCode, std::wstring filePath)
-		        {
-			        if (httpCode != 200)
+			    // download/install DLL from latest release
+			    CurlRequest req;
+			    req.verb = "GET";
+			    req.url  = *urlOpt;
+			    HttpWrapper::SendCurlRequest(req,
+			        downloadFile.wstring(),
+			        [pluginsFolder, configFile, updateCmd](int httpCode, std::wstring filePath)
 			        {
-				        LOGERROR("Invalid HTTP code: {}", httpCode);
-				        return;
-			        }
+				        if (httpCode != 200)
+				        {
+					        LOGERROR("Invalid HTTP code: {}", httpCode);
+					        return;
+				        }
 
-			        // copy file to plugins folder
-			        fs::path downloadedPath{filePath};
-			        fs::copy(downloadedPath, pluginsFolder, fs::copy_options::overwrite_existing);
+				        // copy file to plugins folder
+				        LOG("Copying file to plugins folder...");
+				        fs::path downloadedPath{filePath};
+				        fs::copy(downloadedPath, pluginsFolder, fs::copy_options::overwrite_existing);
 
-			        // delete file in temp directory
-			        fs::remove_all(downloadedPath.parent_path());
+				        // delete file in temp directory
+				        LOG("Deleting file in temp directory...");
+				        fs::remove_all(downloadedPath.parent_path());
 
-			        // Add line to plugins.cfg
-			        const auto newline = std::format("plugin load {}", Format::ToLower(updaterPluginName));
-			        Files::appendLineIfNotExist(configFile, newline);
+				        // Add line to plugins.cfg
+				        LOG("Adding line to plugins.cfg...");
+				        const std::string pluginLoadCmd = pluginUpdaterInfo.makePluginLoadCmd();
+				        Files::appendLineIfNotExist(configFile, pluginLoadCmd);
 
-			        // this sleep aint needed if "plugin load X" blocks until plugin's onLoad is complete. ig we gotta test
-			        cm->executeCommand("sleep 1000");
-
-			        // send update request
-			        afterInstalledCallback();
-		        });
+				        // this works bc "plugin load X" will wait until the plugin has fully loaded before executing the next command
+				        // ... otherwise, we would've had to do cvar probing in a new thread or something
+				        const std::string finalCmd = std::format("{}; {}", pluginLoadCmd, updateCmd);
+				        _globalCvarManager->executeCommand(finalCmd);
+			        });
+		    }
+		    catch (...)
+		    {
+			    LOGERROR("Wow something is fricked in the on_complete callback");
+		    }
 	    });
 }
 

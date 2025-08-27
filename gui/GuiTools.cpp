@@ -136,12 +136,11 @@ void OldSettingsFooter(const char* id, const ImVec2& size, bool showBorder)
 	ImGui::EndChild();
 }
 
-void alt_settings_header(const char*           text,
-    const char*                                currentPluginVersion,
-    const std::shared_ptr<GameWrapper>&        gw,
-    const std::shared_ptr<CVarManagerWrapper>& cm,
-    bool                                       isPluginUpdater,
-    const ImVec4&                              text_color)
+void alt_settings_header(const char*    text,
+    const char*                         currentPluginVersion,
+    const std::shared_ptr<GameWrapper>& gw,
+    bool                                isPluginUpdater,
+    const ImVec4&                       text_color)
 {
 	Spacing(4);
 
@@ -151,7 +150,7 @@ void alt_settings_header(const char*           text,
 
 	ImGui::Text("%s", currentPluginVersion);
 
-	plugin_update_message(gw, cm, isPluginUpdater);
+	plugin_update_message(gw, isPluginUpdater);
 
 	ImGui::Separator();
 }
@@ -171,10 +170,9 @@ void alt_settings_footer(const char* text, const char* url, const ImVec4& text_c
 	ImGui::SetWindowFontScale(1); // undo font scale modification, so it doesnt affect the rest of the UI
 }
 
-void plugin_update_message(const std::shared_ptr<GameWrapper>& gw, const std::shared_ptr<CVarManagerWrapper>& cm, bool isPluginUpdater)
+void plugin_update_message(const std::shared_ptr<GameWrapper>& gw, bool isPluginUpdater)
 {
 	PluginUpdates::PluginUpdateInfo updateStatus;
-
 	{
 		std::lock_guard<std::mutex> lock(PluginUpdates::updateMutex);
 		updateStatus = PluginUpdates::updateInfo;
@@ -185,11 +183,12 @@ void plugin_update_message(const std::shared_ptr<GameWrapper>& gw, const std::sh
 		GUI::SameLineSpacing_relative(20);
 
 		ImGui::TextColored(GUI::Colors::Red, "<------ PLUGIN IS OUT OF DATE!");
-		GUI::ToolTip(isPluginUpdater ? "Click \"Latest version\" and follow the install steps on the GitHub release page\t(it's very easy)"
-		                             : "Using an outdated version can cause features to work incorrectly or even crash the game!\n\n"
-		                               "Click \"Update\" to update the plugin. If that doesn't work for some reason, click \"Latest "
-		                               "version\" and follow the steps on the "
-		                               "GitHub release page\t(it's very easy)");
+		GUI::ToolTip(isPluginUpdater
+		                 ? "Click \"Latest version\" and follow the install steps on the GitHub release page\t(it's very easy)"
+		                 : "Using an outdated version can cause features to work incorrectly or even crash the game!\n\n"
+		                   "Click \"Update\" (and wait a few seconds) to update the plugin.\nIf that doesn't work, click \"Latest "
+		                   "version\" and follow the steps on the "
+		                   "GitHub release page\t(it's very easy)");
 
 		GUI::SameLineSpacing_relative(20);
 		ImGui::Text("The latest version is v%s:", updateStatus.latestVersion.c_str());
@@ -199,7 +198,10 @@ void plugin_update_message(const std::shared_ptr<GameWrapper>& gw, const std::sh
 		if (!isPluginUpdater)
 		{
 			if (ImGui::Button("Update"))
-				PluginUpdates::installUpdate(cm, gw);
+				PluginUpdates::installUpdate(gw);
+			GUI::ToolTip(
+			    "Click this and wait a few seconds to allow the plugin to update.\n\nIf you spam this button and it messes stuff up, "
+			    "that's your fault.");
 
 			GUI::SameLineSpacing_relative(10);
 		}

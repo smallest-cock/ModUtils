@@ -38,16 +38,12 @@ void ClickableLink(const char* label, const char* url, const ImVec4& textColor, 
 {
 	// default size of selectable is just size of label text
 	if (size.x == 0 && size.y == 0)
-	{
 		size = ImGui::CalcTextSize(label);
-	}
 
 	ImGui::PushStyleColor(ImGuiCol_Text, textColor);
 
 	if (ImGui::Selectable(label, false, ImGuiSelectableFlags_None, size))
-	{
 		open_link(url);
-	}
 
 	ImGui::PopStyleColor();
 
@@ -60,10 +56,8 @@ void ClickableLink(const char* label, const char* url, const ImVec4& textColor, 
 
 void Spacing(int amount)
 {
-	for (int i = 0; i < amount; i++)
-	{
+	for (int i = 0; i < amount; ++i)
 		ImGui::Spacing();
-	}
 }
 
 void SameLineSpacing_relative(float horizontalSpacingPx)

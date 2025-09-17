@@ -4,6 +4,47 @@
 
 namespace GUI
 {
+namespace detail
+{
+void coloredTextFormatImpl(const std::string& fmt, std::span<const WordColor> args)
+{
+	size_t argIndex = 0;
+	size_t pos      = 0;
+
+	while (pos < fmt.size())
+	{
+		if (fmt[pos] == '{' && pos + 1 < fmt.size() && fmt[pos + 1] == '}')
+		{
+			// Insert a colored word
+			if (argIndex < args.size())
+			{
+				const auto& wc = args[argIndex++];
+				ImGui::PushStyleColor(ImGuiCol_Text, ImGui::ColorConvertFloat4ToU32(wc.color));
+				ImGui::TextUnformatted(wc.text.c_str());
+				ImGui::PopStyleColor();
+				ImGui::SameLine(0.0f, 0.0f);
+			}
+			pos += 2;
+		}
+		else
+		{
+			// Collect plain text until next {}
+			size_t      next  = fmt.find("{}", pos);
+			std::string plain = fmt.substr(pos, next - pos);
+			if (!plain.empty())
+			{
+				ImGui::TextUnformatted(plain.c_str());
+				ImGui::SameLine(0.0f, 0.0f);
+			}
+			pos = (next == std::string::npos) ? fmt.size() : next;
+		}
+	}
+
+	// Kill trailing SameLine so ImGui doesn’t glue the next widget
+	ImGui::NewLine();
+}
+} // namespace detail
+
 namespace Colors
 {
 const ImVec4 White         = {1, 1, 1, 1};
@@ -20,6 +61,7 @@ const ImVec4 DarkGreen     = {0.0f, 0.5f, 0.0f, 1.0f};
 const ImVec4 ForestGreen   = {0.3f, 0.5f, 0.3f, 1.0f};
 const ImVec4 RealDarkGreen = {0.1f, 0.3f, 0.1f, 1.0f};
 const ImVec4 Gray          = {0.4f, 0.4f, 0.4f, 1.0f};
+const ImVec4 LightGray     = {0.7f, 0.7f, 0.7f, 1.0f};
 const ImVec4 LightOrange   = {1.0f, 0.6f, 0.2f, 1.0f};
 const ImVec4 VividOrange   = {1.0f, 0.4f, 0.0f, 1.0f};
 const ImVec4 Orange        = {1.0f, 0.6f, 0.0f, 1.0f};

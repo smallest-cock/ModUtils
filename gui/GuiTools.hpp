@@ -3,6 +3,23 @@
 
 namespace GUI
 {
+struct WordColor
+{
+	std::string text;
+	ImVec4      color;
+};
+
+namespace detail
+{
+void coloredTextFormatImpl(const std::string& fmt, std::span<const WordColor> args);
+}
+
+template <typename... Args> void ColoredTextFormat(const std::string& fmt, Args&&... args)
+{
+	std::array<WordColor, sizeof...(Args)> arr{std::forward<Args>(args)...};
+	detail::coloredTextFormatImpl(fmt, arr);
+}
+
 void open_link(const char* url);
 void open_link(const wchar_t* url);
 
@@ -128,6 +145,7 @@ extern const ImVec4 ForestGreen;
 extern const ImVec4 RealDarkGreen;
 
 extern const ImVec4 Gray;
+extern const ImVec4 LightGray;
 
 extern const ImVec4 Orange;
 extern const ImVec4 LightOrange;

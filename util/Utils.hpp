@@ -271,9 +271,10 @@ extern PluginUpdaterInfo pluginUpdaterInfo;
 extern PluginUpdateInfo  updateInfo;
 extern std::mutex        updateMutex;
 
-void checkForUpdates(const std::string& modName, const std::string& currentVersion, const std::string& assetName = "");
-void installUpdate(const std::shared_ptr<GameWrapper>& gw);
-void downloadAndInstallUpdaterPlugin(std::shared_ptr<GameWrapper> gw, const std::string& updateCmd);
+void        checkForUpdates(const std::string& modName, const std::string& currentVersion, const std::string& assetName = "");
+std::string getRepoName(const std::string& modName);
+void        installUpdate(const std::shared_ptr<GameWrapper>& gw);
+void        downloadAndInstallUpdaterPlugin(std::shared_ptr<GameWrapper> gw, const std::string& updateCmd);
 
 std::optional<PluginUpdateInfo> getUpdateInfo(const json& releaseJson, const std::string& assetName);
 std::optional<std::string>      getAssetDownloadUrl(const json& releaseJson, const std::string& assetName);

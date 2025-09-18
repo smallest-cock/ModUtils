@@ -727,8 +727,9 @@ std::mutex        updateMutex;
 */
 void checkForUpdates(const std::string& modName, const std::string& currentVersion, const std::string& assetName)
 {
-	CurlRequest req;
-	req.url = std::format("https://api.github.com/repos/smallest-cock/{}/releases/latest", modName);
+	CurlRequest       req;
+	const std::string repoName = getRepoName(modName);
+	req.url                    = std::format("https://api.github.com/repos/smallest-cock/{}/releases/latest", repoName);
 	LOG("Checking for updates using this URL: {}", req.url);
 	HttpWrapper::SendCurlRequest(req,
 	    [modName, currentVersion, assetName](int code, std::string result)
@@ -762,6 +763,16 @@ void checkForUpdates(const std::string& modName, const std::string& currentVersi
 		    else
 			    LOG("Plugin is up to date: {}", currentVersion);
 	    });
+}
+
+std::string getRepoName(const std::string& modName)
+{
+	// handle edge case bc CBO repo name isnt PascalCase like the other plugin repos
+	// ... and I dont know what side effects changing the repo name would have, smh bitch
+	if (modName == "CustomBallOnline")
+		return "Custom-Ball-Online";
+
+	return modName;
 }
 
 // the high level plugin-facing function

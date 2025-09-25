@@ -56,6 +56,12 @@ struct ScopedID
 	~ScopedID() { ImGui::PopID(); }
 };
 
+struct ScopedItemWidth
+{
+	ScopedItemWidth(float width) { ImGui::PushItemWidth(width); }
+	~ScopedItemWidth() { ImGui::PopItemWidth(); }
+};
+
 // scoped version of Indent/Unindent
 // Usage: GUI::ScopedIndent indent{ 20.0f };
 struct ScopedIndent

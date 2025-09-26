@@ -145,6 +145,7 @@ extern const ImVec4 Pinkish;
 extern const ImVec4 LightBlue;
 extern const ImVec4 LightRed;
 extern const ImVec4 LightGreen;
+extern const ImVec4 ChillGreen;
 
 extern const ImVec4 DarkGreen;
 extern const ImVec4 ForestGreen;
@@ -152,6 +153,7 @@ extern const ImVec4 RealDarkGreen;
 
 extern const ImVec4 Gray;
 extern const ImVec4 LightGray;
+extern const ImVec4 LighterGray;
 
 extern const ImVec4 Orange;
 extern const ImVec4 LightOrange;

@@ -116,12 +116,6 @@ void SameLineSpacing_absolute(float horizontalSpacingPx)
 	ImGui::SetCursorPosX(horizontalSpacingPx);
 }
 
-void ToolTip(const char* tip)
-{
-	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("%s", tip);
-}
-
 void centerTextX(const char* text, float offsetCorrection)
 {
 	ImVec2 text_size        = ImGui::CalcTextSize(text);

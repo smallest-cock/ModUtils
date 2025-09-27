@@ -28,9 +28,14 @@ void ClickableLink(const char* label, const char* url, const ImVec4& textColor =
 void Spacing(int amount = 1);
 void SameLineSpacing_relative(float horizontalSpacingPx);
 void SameLineSpacing_absolute(float horizontalSpacingPx);
-void ToolTip(const char* tip);
 void centerTextX(const char* text, float offsetCorrection = 0.0f);
 void centerTextColoredX(const ImVec4& col, const char* text, float offsetCorrection = 0.0f);
+
+template <typename... Args> inline void ToolTip(const char* fmt, Args&&... args)
+{
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip(fmt, std::forward<Args>(args)...);
+}
 
 // scoped version of BeginChild/EndChild
 // Usage: GUI::ScopedChild c{ "SomeLabel", ... };
@@ -70,6 +75,35 @@ struct ScopedIndent
 
 	ScopedIndent(float width = 0.0f) : m_width(width) { ImGui::Indent(width); }
 	~ScopedIndent() { ImGui::Unindent(m_width); }
+};
+
+struct ScopedDisabled
+{
+	std::shared_ptr<bool> state;
+
+	explicit ScopedDisabled(const std::shared_ptr<bool>& flag) : state(flag)
+	{
+		if (!state || *state)
+			return;
+
+		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+	}
+
+	~ScopedDisabled()
+	{
+		if (!state || *state)
+			return;
+
+		ImGui::PopStyleVar();
+		ImGui::PopItemFlag();
+	}
+
+	// non-copyable, but movable
+	ScopedDisabled(const ScopedDisabled&)            = delete;
+	ScopedDisabled& operator=(const ScopedDisabled&) = delete;
+	ScopedDisabled(ScopedDisabled&&)                 = default;
+	ScopedDisabled& operator=(ScopedDisabled&&)      = default;
 };
 
 namespace Colors

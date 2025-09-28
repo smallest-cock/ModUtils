@@ -132,6 +132,13 @@ void centerTextColoredX(const ImVec4& col, const char* text, float offsetCorrect
 	ImGui::TextColored(col, "%s", text);
 }
 
+void CopyButton(const char* label, const char* copyText, float sameLineSpacing)
+{
+	SameLineSpacing_relative(sameLineSpacing);
+	if (ImGui::Button(label))
+		ImGui::SetClipboardText(copyText);
+}
+
 void SettingsHeader(const char* id, const char* pluginVersion, const ImVec2& size, bool showBorder)
 {
 	if (ImGui::BeginChild(id, size, showBorder))

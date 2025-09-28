@@ -30,6 +30,7 @@ void SameLineSpacing_relative(float horizontalSpacingPx);
 void SameLineSpacing_absolute(float horizontalSpacingPx);
 void centerTextX(const char* text, float offsetCorrection = 0.0f);
 void centerTextColoredX(const ImVec4& col, const char* text, float offsetCorrection = 0.0f);
+void CopyButton(const char* label, const char* copyText, float sameLineSpacing = 20.0f);
 
 template <typename... Args> inline void ToolTip(const char* fmt, Args&&... args)
 {

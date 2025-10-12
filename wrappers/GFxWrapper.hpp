@@ -1,12 +1,10 @@
 #pragma once
-#include <components/Instances.hpp>
 #include "../gui/GuiTools.hpp"
-
 
 class GfxWrapper
 {
 private:
-	UGFxDataRow_X* gfx_row = nullptr;
+	UGFxDataRow_X*   gfx_row   = nullptr;
 	UGFxDataStore_X* datastore = nullptr;
 
 public:
@@ -15,23 +13,23 @@ public:
 
 	~GfxWrapper() {}
 
-	UGFxDataRow_X* get_gfx_row();
+	UGFxDataRow_X*   get_gfx_row();
 	UGFxDataStore_X* get_datastore();
-	_NODISCARD bool is_null();
+	_NODISCARD bool  is_null();
 
 	// setters
 	void set_string(const std::string& col_name, const std::string& value);
 	void set_string(const FName& col_name, const FString& value);
-	
+
 	void set_int(const std::string& col_name, int32_t value);
 	void set_int(const FName& col_name, int32_t value);
-	
+
 	void set_float(const std::string& col_name, float value);
 	void set_float(const FName& col_name, float value);
-	
+
 	void set_bool(const std::string& col_name, bool value);
 	void set_bool(const FName& col_name, bool value);
-	
+
 	void set_texture(const std::string& col_name, UTexture* value);
 	void set_texture(const FName& col_name, UTexture* value);
 
@@ -46,10 +44,10 @@ public:
 
 	int get_int(const std::string& col_name);
 	int get_int(const FName& col_name);
-	
+
 	float get_float(const std::string& col_name);
 	float get_float(const FName& col_name);
-	
+
 	bool get_bool(const std::string& col_name);
 	bool get_bool(const FName& col_name);
 
@@ -60,4 +58,3 @@ private:
 	void update_datastore();
 	bool unable_to_set_value(const std::string& val_type);
 };
-

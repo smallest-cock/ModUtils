@@ -894,7 +894,7 @@ std::optional<std::string> getAssetDownloadUrl(const json& releaseJson, const st
 
 std::optional<std::string> getVersionStr(const json& releaseJson)
 {
-	constexpr auto          versionPattern = R"(v?(\d+\.\d+\.\d+))";
+	constexpr auto          versionPattern = R"(v?(\d+\.\d+\.\d+(?:[-\w\.]+)?))";
 	static const std::regex re{versionPattern};
 	std::smatch             match;
 
@@ -903,7 +903,7 @@ std::optional<std::string> getVersionStr(const json& releaseJson)
 		return match[1].str();
 	else
 	{
-		LOGERROR("Release name \"{}\" doesn't match regex patten: \"{}\"", releaseName, versionPattern);
+		LOGERROR("Release name \"{}\" doesn't match regex pattern: \"{}\"", releaseName, versionPattern);
 		return std::nullopt;
 	}
 }

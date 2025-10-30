@@ -47,26 +47,28 @@ void coloredTextFormatImpl(const std::string& fmt, std::span<const WordColor> ar
 
 namespace Colors
 {
-const ImVec4 White         = {1, 1, 1, 1};
-const ImVec4 Red           = {1, 0, 0, 1};
-const ImVec4 Green         = {0, 1, 0, 1};
-const ImVec4 Blue          = {0, 0, 1, 1};
-const ImVec4 Yellow        = {1, 1, 0, 1};
-const ImVec4 BlueGreen     = {0, 1, 1, 1};
-const ImVec4 Pinkish       = {1, 0, 1, 1};
-const ImVec4 LightBlue     = {0.5f, 0.5f, 1.0f, 1.0f};
-const ImVec4 LightRed      = {1.0f, 0.4f, 0.4f, 1.0f};
-const ImVec4 LightGreen    = {0.5f, 1.0f, 0.5f, 1.0f};
-const ImVec4 ChillGreen    = {0.2f, 0.7f, 0.2f, 1.0f};
-const ImVec4 DarkGreen     = {0.0f, 0.5f, 0.0f, 1.0f};
-const ImVec4 ForestGreen   = {0.3f, 0.5f, 0.3f, 1.0f};
-const ImVec4 RealDarkGreen = {0.1f, 0.3f, 0.1f, 1.0f};
-const ImVec4 Gray          = {0.4f, 0.4f, 0.4f, 1.0f};
-const ImVec4 LightGray     = {0.7f, 0.7f, 0.7f, 1.0f};
-const ImVec4 LighterGray   = {0.8f, 0.8f, 0.8f, 1.0f};
-const ImVec4 LightOrange   = {1.0f, 0.6f, 0.2f, 1.0f};
-const ImVec4 VividOrange   = {1.0f, 0.4f, 0.0f, 1.0f};
-const ImVec4 Orange        = {1.0f, 0.6f, 0.0f, 1.0f};
+const ImVec4 White          = {1, 1, 1, 1};
+const ImVec4 Red            = {1, 0, 0, 1};
+const ImVec4 Green          = {0, 1, 0, 1};
+const ImVec4 Blue           = {0, 0, 1, 1};
+const ImVec4 Yellow         = {1, 1, 0, 1};
+const ImVec4 BlueGreen      = {0, 1, 1, 1};
+const ImVec4 Pinkish        = {1, 0, 1, 1};
+const ImVec4 LightBlue      = {0.5f, 0.5f, 1.0f, 1.0f};
+const ImVec4 LightRed       = {1.0f, 0.4f, 0.4f, 1.0f};
+const ImVec4 VividGreen     = {0.0f, 0.8f, 0.0f, 1.0f};
+const ImVec4 LightGreen     = {0.5f, 1.0f, 0.5f, 1.0f};
+const ImVec4 ChillGreen     = {0.2f, 0.7f, 0.2f, 1.0f};
+const ImVec4 DarkGreen      = {0.0f, 0.5f, 0.0f, 1.0f};
+const ImVec4 ForestGreen    = {0.3f, 0.5f, 0.3f, 1.0f};
+const ImVec4 RealDarkGreen  = {0.1f, 0.3f, 0.1f, 1.0f};
+const ImVec4 Gray           = {0.4f, 0.4f, 0.4f, 1.0f};
+const ImVec4 LightGray      = {0.7f, 0.7f, 0.7f, 1.0f};
+const ImVec4 LighterGray    = {0.8f, 0.8f, 0.8f, 1.0f};
+const ImVec4 SuperLightGray = {0.9f, 0.9f, 0.9f, 1.0f};
+const ImVec4 LightOrange    = {1.0f, 0.6f, 0.2f, 1.0f};
+const ImVec4 VividOrange    = {1.0f, 0.4f, 0.0f, 1.0f};
+const ImVec4 Orange         = {1.0f, 0.6f, 0.0f, 1.0f};
 } // namespace Colors
 
 void open_link(const char* url)

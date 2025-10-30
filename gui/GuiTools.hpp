@@ -6,7 +6,15 @@ namespace GUI
 struct WordColor
 {
 	std::string text;
-	ImVec4      color;
+	ImVec4      color = {1.0f, 1.0f, 1.0f, 1.0f};
+
+	void display() const
+	{
+		ImGui::PushStyleColor(ImGuiCol_Text, ImGui::ColorConvertFloat4ToU32(color));
+		ImGui::TextUnformatted(text.c_str());
+		ImGui::PopStyleColor();
+		ImGui::SameLine(0.0f, 0.0f);
+	}
 };
 
 namespace detail
@@ -182,6 +190,7 @@ extern const ImVec4 LightRed;
 extern const ImVec4 LightGreen;
 extern const ImVec4 ChillGreen;
 
+extern const ImVec4 VividGreen;
 extern const ImVec4 DarkGreen;
 extern const ImVec4 ForestGreen;
 extern const ImVec4 RealDarkGreen;
@@ -189,6 +198,7 @@ extern const ImVec4 RealDarkGreen;
 extern const ImVec4 Gray;
 extern const ImVec4 LightGray;
 extern const ImVec4 LighterGray;
+extern const ImVec4 SuperLightGray;
 
 extern const ImVec4 Orange;
 extern const ImVec4 LightOrange;

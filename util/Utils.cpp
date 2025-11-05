@@ -4,6 +4,192 @@
 #include <random>
 #include <regex>
 
+namespace Memory
+{
+PatternData::~PatternData()
+{
+	delete[] arrayOfBytes;
+	delete[] mask;
+}
+
+PatternData::PatternData(const std::string& sig)
+{
+	if (!parseSig(sig, *this))
+	{
+		arrayOfBytes = nullptr;
+		mask         = nullptr;
+		length       = 0;
+	}
+}
+
+PatternData::PatternData(PatternData&& other) noexcept
+{
+	arrayOfBytes       = other.arrayOfBytes;
+	mask               = other.mask;
+	length             = other.length;
+	other.arrayOfBytes = nullptr;
+	other.mask         = nullptr;
+	other.length       = 0;
+}
+
+PatternData& PatternData::operator=(PatternData&& other) noexcept
+{
+	if (this != &other)
+	{
+		delete[] arrayOfBytes;
+		delete[] mask;
+
+		arrayOfBytes = other.arrayOfBytes;
+		mask         = other.mask;
+		length       = other.length;
+
+		other.arrayOfBytes = nullptr;
+		other.mask         = nullptr;
+		other.length       = 0;
+	}
+	return *this;
+}
+
+// Parses a pretty pattern string into an AOB + mask
+bool parseSig(const std::string& sig, PatternData& outPattern)
+{
+	size_t   maxLen   = sig.size() / 2 + 1;
+	uint8_t* tmpBytes = new uint8_t[maxLen];
+	char*    tmpMask  = new char[maxLen + 1];
+
+	size_t  byteIndex   = 0;
+	int     nibbleCount = 0;
+	uint8_t currentByte = 0;
+
+	auto hexToNibble = [](char c) -> int
+	{
+		if (c >= '0' && c <= '9')
+			return c - '0';
+		if (c >= 'A' && c <= 'F')
+			return c - 'A' + 10;
+		if (c >= 'a' && c <= 'f')
+			return c - 'a' + 10;
+		return -1;
+	};
+
+	for (size_t i = 0; i < sig.size(); ++i)
+	{
+		char c = sig[i];
+
+		if (std::isspace(static_cast<unsigned char>(c)))
+			continue;
+
+		if (c == '?')
+		{
+			if (nibbleCount == 1)
+			{
+				tmpBytes[byteIndex]  = 0x00;
+				tmpMask[byteIndex++] = '?';
+				nibbleCount          = 0;
+			}
+			else
+			{
+				if (i + 1 < sig.size() && sig[i + 1] == '?')
+					++i;
+				tmpBytes[byteIndex]  = 0x00;
+				tmpMask[byteIndex++] = '?';
+			}
+			continue;
+		}
+
+		int nibble = hexToNibble(c);
+		if (nibble == -1)
+		{
+			delete[] tmpBytes;
+			delete[] tmpMask;
+			return false;
+		}
+
+		if (nibbleCount == 0)
+		{
+			currentByte = nibble << 4;
+			nibbleCount = 1;
+		}
+		else
+		{
+			currentByte |= nibble;
+			tmpBytes[byteIndex]  = currentByte;
+			tmpMask[byteIndex++] = 'x';
+			nibbleCount          = 0;
+		}
+	}
+
+	if (nibbleCount == 1)
+	{
+		tmpBytes[byteIndex]  = 0x00;
+		tmpMask[byteIndex++] = '?';
+	}
+
+	delete[] outPattern.arrayOfBytes;
+	delete[] outPattern.mask;
+
+	outPattern.arrayOfBytes = new uint8_t[byteIndex];
+	outPattern.mask         = new char[byteIndex + 1];
+	outPattern.length       = byteIndex;
+
+	std::memcpy(outPattern.arrayOfBytes, tmpBytes, byteIndex);
+	std::memcpy(outPattern.mask, tmpMask, byteIndex);
+	outPattern.mask[byteIndex] = '\0';
+
+	delete[] tmpBytes;
+	delete[] tmpMask;
+	return true;
+}
+
+uintptr_t findPattern(HMODULE module, const std::string& pattern)
+{
+	Memory::PatternData sig{pattern};
+	if (sig.length == 0)
+	{
+		LOGERROR("Unable to parse sig! Returning 0...");
+		return 0;
+	}
+	return findPattern(module, sig.arrayOfBytes, sig.mask);
+}
+
+uintptr_t findPattern(HMODULE module, const unsigned char* pattern, const char* mask)
+{
+	MODULEINFO info = {};
+	GetModuleInformation(GetCurrentProcess(), module, &info, sizeof(MODULEINFO));
+
+	uintptr_t start  = reinterpret_cast<uintptr_t>(module);
+	size_t    length = info.SizeOfImage;
+
+	size_t pos        = 0;
+	size_t maskLength = std::strlen(mask) - 1;
+
+	for (uintptr_t retAddress = start; retAddress < start + length; retAddress++)
+	{
+		if (*reinterpret_cast<unsigned char*>(retAddress) == pattern[pos] || mask[pos] == '?')
+		{
+			if (pos == maskLength)
+				return (retAddress - maskLength);
+			pos++;
+		}
+		else
+		{
+			retAddress -= pos;
+			pos = 0;
+		}
+	}
+	return NULL;
+}
+
+uintptr_t getRipRelativeAddr(uintptr_t startAddr, int offsetToDisplacementInt32)
+{
+	if (!startAddr)
+		return 0;
+	uintptr_t ripRelativeOffsetAddr = startAddr + offsetToDisplacementInt32;
+	int32_t   displacement          = *reinterpret_cast<int32_t*>(ripRelativeOffsetAddr);
+	return (ripRelativeOffsetAddr + 4) + displacement;
+}
+} // namespace Memory
+
 namespace Format
 {
 void construct_label(const std::vector<int>& codes, std::string& out_str)

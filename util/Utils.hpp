@@ -31,6 +31,33 @@ inline std::wstring ToWideString(const std::string& str)
 } // namespace StringUtils
 #endif
 
+namespace Memory
+{
+struct PatternData
+{
+	uint8_t* arrayOfBytes = nullptr;
+	char*    mask         = nullptr;
+	size_t   length       = 0;
+
+	PatternData() = default;
+	explicit PatternData(const std::string& sig);
+	~PatternData();
+
+	// disable copy
+	PatternData(const PatternData&)            = delete;
+	PatternData& operator=(const PatternData&) = delete;
+
+	// enable move
+	PatternData(PatternData&& other) noexcept;
+	PatternData& operator=(PatternData&& other) noexcept;
+};
+
+bool      parseSig(const std::string& sig, PatternData& outPattern);
+uintptr_t findPattern(HMODULE module, const std::string& sig);
+uintptr_t findPattern(HMODULE module, const unsigned char* pattern, const char* mask);
+uintptr_t getRipRelativeAddr(uintptr_t startAddr, int offsetToDisplacementInt32);
+} // namespace Memory
+
 namespace Format
 {
 constexpr std::array<char, 53> letters = {'a',

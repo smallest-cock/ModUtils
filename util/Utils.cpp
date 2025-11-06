@@ -6,998 +6,896 @@
 
 namespace Memory
 {
-PatternData::~PatternData()
-{
-	delete[] arrayOfBytes;
-	delete[] mask;
-}
-
-PatternData::PatternData(const std::string& sig)
-{
-	if (!parseSig(sig, *this))
-	{
-		arrayOfBytes = nullptr;
-		mask         = nullptr;
-		length       = 0;
-	}
-}
-
-PatternData::PatternData(PatternData&& other) noexcept
-{
-	arrayOfBytes       = other.arrayOfBytes;
-	mask               = other.mask;
-	length             = other.length;
-	other.arrayOfBytes = nullptr;
-	other.mask         = nullptr;
-	other.length       = 0;
-}
-
-PatternData& PatternData::operator=(PatternData&& other) noexcept
-{
-	if (this != &other)
+	PatternData::~PatternData()
 	{
 		delete[] arrayOfBytes;
 		delete[] mask;
+	}
 
-		arrayOfBytes = other.arrayOfBytes;
-		mask         = other.mask;
-		length       = other.length;
+	PatternData::PatternData(const std::string& sig)
+	{
+		if (!parseSig(sig, *this))
+		{
+			arrayOfBytes = nullptr;
+			mask         = nullptr;
+			length       = 0;
+		}
+	}
 
+	PatternData::PatternData(PatternData&& other) noexcept
+	{
+		arrayOfBytes       = other.arrayOfBytes;
+		mask               = other.mask;
+		length             = other.length;
 		other.arrayOfBytes = nullptr;
 		other.mask         = nullptr;
 		other.length       = 0;
 	}
-	return *this;
-}
 
-// Parses a pretty pattern string into an AOB + mask
-bool parseSig(const std::string& sig, PatternData& outPattern)
-{
-	size_t   maxLen   = sig.size() / 2 + 1;
-	uint8_t* tmpBytes = new uint8_t[maxLen];
-	char*    tmpMask  = new char[maxLen + 1];
-
-	size_t  byteIndex   = 0;
-	int     nibbleCount = 0;
-	uint8_t currentByte = 0;
-
-	auto hexToNibble = [](char c) -> int
+	PatternData& PatternData::operator=(PatternData&& other) noexcept
 	{
-		if (c >= '0' && c <= '9')
-			return c - '0';
-		if (c >= 'A' && c <= 'F')
-			return c - 'A' + 10;
-		if (c >= 'a' && c <= 'f')
-			return c - 'a' + 10;
-		return -1;
-	};
-
-	for (size_t i = 0; i < sig.size(); ++i)
-	{
-		char c = sig[i];
-
-		if (std::isspace(static_cast<unsigned char>(c)))
-			continue;
-
-		if (c == '?')
+		if (this != &other)
 		{
-			if (nibbleCount == 1)
+			delete[] arrayOfBytes;
+			delete[] mask;
+
+			arrayOfBytes = other.arrayOfBytes;
+			mask         = other.mask;
+			length       = other.length;
+
+			other.arrayOfBytes = nullptr;
+			other.mask         = nullptr;
+			other.length       = 0;
+		}
+		return *this;
+	}
+
+	// Parses a pretty pattern string into an AOB + mask
+	bool parseSig(const std::string& sig, PatternData& outPattern)
+	{
+		size_t   maxLen   = sig.size() / 2 + 1;
+		uint8_t* tmpBytes = new uint8_t[maxLen];
+		char*    tmpMask  = new char[maxLen + 1];
+
+		size_t  byteIndex   = 0;
+		int     nibbleCount = 0;
+		uint8_t currentByte = 0;
+
+		auto hexToNibble = [](char c) -> int
+		{
+			if (c >= '0' && c <= '9')
+				return c - '0';
+			if (c >= 'A' && c <= 'F')
+				return c - 'A' + 10;
+			if (c >= 'a' && c <= 'f')
+				return c - 'a' + 10;
+			return -1;
+		};
+
+		for (size_t i = 0; i < sig.size(); ++i)
+		{
+			char c = sig[i];
+
+			if (std::isspace(static_cast<unsigned char>(c)))
+				continue;
+
+			if (c == '?')
 			{
-				tmpBytes[byteIndex]  = 0x00;
-				tmpMask[byteIndex++] = '?';
-				nibbleCount          = 0;
+				if (nibbleCount == 1)
+				{
+					tmpBytes[byteIndex]  = 0x00;
+					tmpMask[byteIndex++] = '?';
+					nibbleCount          = 0;
+				}
+				else
+				{
+					if (i + 1 < sig.size() && sig[i + 1] == '?')
+						++i;
+					tmpBytes[byteIndex]  = 0x00;
+					tmpMask[byteIndex++] = '?';
+				}
+				continue;
+			}
+
+			int nibble = hexToNibble(c);
+			if (nibble == -1)
+			{
+				delete[] tmpBytes;
+				delete[] tmpMask;
+				return false;
+			}
+
+			if (nibbleCount == 0)
+			{
+				currentByte = nibble << 4;
+				nibbleCount = 1;
 			}
 			else
 			{
-				if (i + 1 < sig.size() && sig[i + 1] == '?')
-					++i;
-				tmpBytes[byteIndex]  = 0x00;
-				tmpMask[byteIndex++] = '?';
+				currentByte |= nibble;
+				tmpBytes[byteIndex]  = currentByte;
+				tmpMask[byteIndex++] = 'x';
+				nibbleCount          = 0;
 			}
-			continue;
 		}
 
-		int nibble = hexToNibble(c);
-		if (nibble == -1)
+		if (nibbleCount == 1)
 		{
-			delete[] tmpBytes;
-			delete[] tmpMask;
-			return false;
+			tmpBytes[byteIndex]  = 0x00;
+			tmpMask[byteIndex++] = '?';
 		}
 
-		if (nibbleCount == 0)
-		{
-			currentByte = nibble << 4;
-			nibbleCount = 1;
-		}
-		else
-		{
-			currentByte |= nibble;
-			tmpBytes[byteIndex]  = currentByte;
-			tmpMask[byteIndex++] = 'x';
-			nibbleCount          = 0;
-		}
+		delete[] outPattern.arrayOfBytes;
+		delete[] outPattern.mask;
+
+		outPattern.arrayOfBytes = new uint8_t[byteIndex];
+		outPattern.mask         = new char[byteIndex + 1];
+		outPattern.length       = byteIndex;
+
+		std::memcpy(outPattern.arrayOfBytes, tmpBytes, byteIndex);
+		std::memcpy(outPattern.mask, tmpMask, byteIndex);
+		outPattern.mask[byteIndex] = '\0';
+
+		delete[] tmpBytes;
+		delete[] tmpMask;
+		return true;
 	}
 
-	if (nibbleCount == 1)
+	uintptr_t findPattern(HMODULE module, const std::string& pattern)
 	{
-		tmpBytes[byteIndex]  = 0x00;
-		tmpMask[byteIndex++] = '?';
-	}
-
-	delete[] outPattern.arrayOfBytes;
-	delete[] outPattern.mask;
-
-	outPattern.arrayOfBytes = new uint8_t[byteIndex];
-	outPattern.mask         = new char[byteIndex + 1];
-	outPattern.length       = byteIndex;
-
-	std::memcpy(outPattern.arrayOfBytes, tmpBytes, byteIndex);
-	std::memcpy(outPattern.mask, tmpMask, byteIndex);
-	outPattern.mask[byteIndex] = '\0';
-
-	delete[] tmpBytes;
-	delete[] tmpMask;
-	return true;
-}
-
-uintptr_t findPattern(HMODULE module, const std::string& pattern)
-{
-	Memory::PatternData sig{pattern};
-	if (sig.length == 0)
-	{
-		LOGERROR("Unable to parse sig! Returning 0...");
-		return 0;
-	}
-	return findPattern(module, sig.arrayOfBytes, sig.mask);
-}
-
-uintptr_t findPattern(HMODULE module, const unsigned char* pattern, const char* mask)
-{
-	MODULEINFO info = {};
-	GetModuleInformation(GetCurrentProcess(), module, &info, sizeof(MODULEINFO));
-
-	uintptr_t start  = reinterpret_cast<uintptr_t>(module);
-	size_t    length = info.SizeOfImage;
-
-	size_t pos        = 0;
-	size_t maskLength = std::strlen(mask) - 1;
-
-	for (uintptr_t retAddress = start; retAddress < start + length; retAddress++)
-	{
-		if (*reinterpret_cast<unsigned char*>(retAddress) == pattern[pos] || mask[pos] == '?')
+		Memory::PatternData sig{pattern};
+		if (sig.length == 0)
 		{
-			if (pos == maskLength)
-				return (retAddress - maskLength);
-			pos++;
+			LOGERROR("Unable to parse sig! Returning 0...");
+			return 0;
 		}
-		else
-		{
-			retAddress -= pos;
-			pos = 0;
-		}
+		return findPattern(module, sig.arrayOfBytes, sig.mask);
 	}
-	return NULL;
-}
 
-uintptr_t getRipRelativeAddr(uintptr_t startAddr, int offsetToDisplacementInt32)
-{
-	if (!startAddr)
-		return 0;
-	uintptr_t ripRelativeOffsetAddr = startAddr + offsetToDisplacementInt32;
-	int32_t   displacement          = *reinterpret_cast<int32_t*>(ripRelativeOffsetAddr);
-	return (ripRelativeOffsetAddr + 4) + displacement;
-}
+	uintptr_t findPattern(HMODULE module, const unsigned char* pattern, const char* mask)
+	{
+		MODULEINFO info = {};
+		GetModuleInformation(GetCurrentProcess(), module, &info, sizeof(MODULEINFO));
+
+		uintptr_t start  = reinterpret_cast<uintptr_t>(module);
+		size_t    length = info.SizeOfImage;
+
+		size_t pos        = 0;
+		size_t maskLength = std::strlen(mask) - 1;
+
+		for (uintptr_t retAddress = start; retAddress < start + length; retAddress++)
+		{
+			if (*reinterpret_cast<unsigned char*>(retAddress) == pattern[pos] || mask[pos] == '?')
+			{
+				if (pos == maskLength)
+					return (retAddress - maskLength);
+				pos++;
+			}
+			else
+			{
+				retAddress -= pos;
+				pos = 0;
+			}
+		}
+		return NULL;
+	}
+
+	uintptr_t getRipRelativeAddr(uintptr_t startAddr, int offsetToDisplacementInt32)
+	{
+		if (!startAddr)
+			return 0;
+		uintptr_t ripRelativeOffsetAddr = startAddr + offsetToDisplacementInt32;
+		int32_t   displacement          = *reinterpret_cast<int32_t*>(ripRelativeOffsetAddr);
+		return (ripRelativeOffsetAddr + 4) + displacement;
+	}
 } // namespace Memory
 
 namespace Format
 {
-void construct_label(const std::vector<int>& codes, std::string& out_str)
-{
-	out_str.clear();
-
-	for (int code : codes)
+	void construct_label(const std::vector<int>& codes, std::string& out_str)
 	{
-		out_str += letters[code];
-	}
-}
+		out_str.clear();
 
-std::string ToASCIIString(std::string str)
-{
-	// Remove non-ASCII characters
-	str.erase(std::remove_if(str.begin(), str.end(), [](unsigned char c) { return c > 127; }), str.end());
-
-	return str;
-}
-
-std::string ToHexString(uintptr_t address)
-{
-	// Adjust width based on the platform's pointer size
-	constexpr int pointerWidth = sizeof(uintptr_t) * 2; // Each byte is 2 hex digits
-	return std::format("0x{:0{}X}", address, pointerWidth);
-}
-
-std::string ToHexString(int32_t decimal_val, int32_t min_hex_digits) { return std::format("0x{:0{}X}", decimal_val, min_hex_digits); }
-
-uintptr_t HexToIntPointer(const std::string& hexStr)
-{
-	uintptr_t         decimal = NULL;
-	std::stringstream stream;
-
-	stream << std::hex << hexStr; // Load the hex string into the stream for conversion
-
-	// Attempt conversion and handle errors
-	if (!(stream >> decimal))
-	{
-		LOG("[ERROR] Invalid hexadecimal string: " + hexStr);
-		return NULL;
+		for (int code : codes)
+		{
+			out_str += letters[code];
+		}
 	}
 
-	return decimal;
-}
-
-std::string LinearColorToHex(const LinearColor& color, bool use_alpha)
-{
-	// Create a stringstream to format the hex string
-	std::stringstream ss;
-	ss << "#";
-
-	// Convert each color component (R, G, B, A) to a 2-digit hex string
-	ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.R);
-	ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.G);
-	ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.B);
-	if (use_alpha)
-		ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.A);
-
-	// Return the formatted string
-	return ss.str();
-}
-
-std::string GenRandomString(int length)
-{
-	// Define character set
-	const std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-	// Initialize random number generator
-	std::random_device                 rd;
-	std::mt19937                       gen(rd());
-	std::uniform_int_distribution<int> distr(0, charset.length() - 1);
-
-	// Generate random string
-	std::string randomString;
-	randomString.reserve(length);
-	for (int i = 0; i < length; ++i)
+	std::string ToASCIIString(std::string str)
 	{
-		randomString += charset[distr(gen)];
+		// Remove non-ASCII characters
+		str.erase(std::remove_if(str.begin(), str.end(), [](unsigned char c) { return c > 127; }), str.end());
+
+		return str;
 	}
 
-	return randomString;
-}
-
-std::vector<std::string> SplitStrByNewline(const std::string& input)
-{
-	std::vector<std::string> lines;
-	std::istringstream       iss(input);
-	std::string              line;
-
-	// Read each line using std::getline with '\n' as delimiter
-	while (std::getline(iss, line))
+	std::string ToHexString(uintptr_t address)
 	{
-		lines.push_back(line);
+		// Adjust width based on the platform's pointer size
+		constexpr int pointerWidth = sizeof(uintptr_t) * 2; // Each byte is 2 hex digits
+		return std::format("0x{:0{}X}", address, pointerWidth);
 	}
 
-	return lines;
-}
+	std::string ToHexString(int32_t decimal_val, int32_t min_hex_digits) { return std::format("0x{:0{}X}", decimal_val, min_hex_digits); }
 
-std::vector<std::string> SplitStr(const std::string& str, char delimiter)
-{
-	std::vector<std::string> parts;
-	std::stringstream        ss(str);
-	std::string              item;
-	while (std::getline(ss, item, delimiter))
+	uintptr_t HexToIntPointer(const std::string& hexStr)
 	{
-		parts.push_back(item);
+		uintptr_t         decimal = NULL;
+		std::stringstream stream;
+
+		stream << std::hex << hexStr; // Load the hex string into the stream for conversion
+
+		// Attempt conversion and handle errors
+		if (!(stream >> decimal))
+		{
+			LOG("[ERROR] Invalid hexadecimal string: " + hexStr);
+			return NULL;
+		}
+
+		return decimal;
 	}
-	return parts;
-}
 
-std::vector<std::string> SplitStr(const std::string& str, const std::string& delimiter)
-{
-	std::vector<std::string> tokens;
-	size_t                   start = 0;
-	size_t                   end   = str.find(delimiter);
-
-	while (end != std::string::npos)
+	std::string LinearColorToHex(const LinearColor& color, bool use_alpha)
 	{
+		// Create a stringstream to format the hex string
+		std::stringstream ss;
+		ss << "#";
+
+		// Convert each color component (R, G, B, A) to a 2-digit hex string
+		ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.R);
+		ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.G);
+		ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.B);
+		if (use_alpha)
+			ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(color.A);
+
+		// Return the formatted string
+		return ss.str();
+	}
+
+	std::string GenRandomString(int length)
+	{
+		// Define character set
+		const std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+		// Initialize random number generator
+		std::random_device                 rd;
+		std::mt19937                       gen(rd());
+		std::uniform_int_distribution<int> distr(0, charset.length() - 1);
+
+		// Generate random string
+		std::string randomString;
+		randomString.reserve(length);
+		for (int i = 0; i < length; ++i)
+			randomString += charset[distr(gen)];
+
+		return randomString;
+	}
+
+	std::vector<std::string> SplitStrByNewline(const std::string& input)
+	{
+		std::vector<std::string> lines;
+		std::istringstream       iss(input);
+		std::string              line;
+
+		// Read each line using std::getline with '\n' as delimiter
+		while (std::getline(iss, line))
+			lines.push_back(line);
+
+		return lines;
+	}
+
+	std::vector<std::string> SplitStr(const std::string& str, char delimiter)
+	{
+		std::vector<std::string> parts;
+		std::stringstream        ss(str);
+		std::string              item;
+		while (std::getline(ss, item, delimiter))
+			parts.push_back(item);
+		return parts;
+	}
+
+	std::vector<std::string> SplitStr(const std::string& str, const std::string& delimiter)
+	{
+		std::vector<std::string> tokens;
+		size_t                   start = 0;
+		size_t                   end   = str.find(delimiter);
+
+		while (end != std::string::npos)
+		{
+			tokens.push_back(str.substr(start, end - start));
+			start = end + delimiter.length();
+			end   = str.find(delimiter, start);
+		}
+
+		// Add the last token
 		tokens.push_back(str.substr(start, end - start));
-		start = end + delimiter.length();
-		end   = str.find(delimiter, start);
+
+		return tokens;
 	}
 
-	// Add the last token
-	tokens.push_back(str.substr(start, end - start));
-
-	return tokens;
-}
-
-std::pair<std::string, std::string> SplitStringInTwo(const std::string& str, const std::string& delimiter)
-{
-	size_t pos = str.find(delimiter);
-	if (pos == std::string::npos)
+	std::pair<std::string, std::string> SplitStringInTwo(const std::string& str, const std::string& delimiter)
 	{
-		return {str, ""}; // If delimiter is not found, return the original string and an empty string.
+		size_t pos = str.find(delimiter);
+		if (pos == std::string::npos)
+			return {str, ""}; // If delimiter is not found, return the original string and an empty string.
+
+		std::string left  = str.substr(0, pos);
+		std::string right = str.substr(pos + delimiter.length());
+
+		return {left, right};
 	}
 
-	std::string left  = str.substr(0, pos);
-	std::string right = str.substr(pos + delimiter.length());
-
-	return {left, right};
-}
-
-std::string EscapeBraces(const std::string& str)
-{
-	std::string escaped;
-	for (char ch : str)
+	std::string EscapeBraces(const std::string& str)
 	{
-		if (ch == '{' || ch == '}')
+		std::string escaped;
+		for (char ch : str)
 		{
-			escaped += ch; // Add an extra brace to escape it
+			if (ch == '{' || ch == '}')
+				escaped += ch; // Add an extra brace to escape it
+			escaped += ch;
 		}
-		escaped += ch;
-	}
-	return escaped;
-}
-
-std::string EscapeQuotesHTML(const std::string& input)
-{
-	std::string escapedString;
-	for (char ch : input)
-	{
-		if (ch == '"')
-		{
-			escapedString += "******"; // Replace " with ******
-		}
-		else if (ch == '#')
-		{
-			escapedString += "$$$$$$"; // Replace # with $$$$$$
-		}
-		else
-		{
-			escapedString += ch;
-		}
-	}
-	return escapedString;
-}
-
-std::string UnescapeQuotesHTML(const std::string& input)
-{
-	std::string unescapedString;
-	size_t      pos = 0;
-
-	// Find and replace ****** with "
-	while (pos < input.length())
-	{
-		size_t found = input.find("******", pos);
-		if (found != std::string::npos)
-		{
-			unescapedString += input.substr(pos, found - pos); // Add characters before &quot;
-			unescapedString += '"';                            // Replace ****** with "
-			pos = found + 6;                                   // Move past "******"
-		}
-		else
-		{
-			unescapedString += input.substr(pos); // Add remaining characters
-			break;
-		}
+		return escaped;
 	}
 
-	std::string okPal;
-	pos = 0;
-
-	// Find and replace $$$$$$ with #
-	while (pos < unescapedString.length())
+	std::string EscapeQuotesHTML(const std::string& input)
 	{
-		size_t found = unescapedString.find("$$$$$$", pos);
-		if (found != std::string::npos)
+		std::string escapedString;
+		for (char ch : input)
 		{
-			okPal += unescapedString.substr(pos, found - pos); // Add characters before &quot;
-			okPal += '#';                                      // Replace $$$$$$ with #
-			pos = found + 6;                                   // Move past "$$$$$$"
+			if (ch == '"')
+				escapedString += "******"; // Replace " with ******
+			else if (ch == '#')
+				escapedString += "$$$$$$"; // Replace # with $$$$$$
+			else
+				escapedString += ch;
 		}
-		else
+		return escapedString;
+	}
+
+	std::string UnescapeQuotesHTML(const std::string& input)
+	{
+		std::string unescapedString;
+		size_t      pos = 0;
+
+		// Find and replace ****** with "
+		while (pos < input.length())
 		{
-			okPal += unescapedString.substr(pos); // Add remaining characters
-			break;
-		}
-	}
-
-	return okPal;
-}
-
-std::string RemoveTrailingChar(std::string str, char trailingChar)
-{
-	if (!str.empty() && str.back() == trailingChar)
-	{
-		str.pop_back(); // Removes the last character
-	}
-
-	return str;
-}
-
-std::string EscapeForHTML(const std::string& input)
-{
-	std::string output;
-	output.reserve(input.size()); // reserve space to reduce reallocations
-
-	for (char ch : input)
-	{
-		switch (ch)
-		{
-		case '&':
-			output += "&amp;";
-			break;
-		case '<':
-			output += "&lt;";
-			break;
-		case '>':
-			output += "&gt;";
-			break;
-		case '"':
-			output += "&quot;";
-			break;
-		case '\'':
-			output += "&apos;";
-			break;
-		default:
-			output += ch;
-			break;
-		}
-	}
-
-	return output;
-}
-
-std::string EscapeForHTMLIncludingSpaces(const std::string& input)
-{
-	std::string output;
-	output.reserve(input.size()); // reserve space to reduce reallocations
-
-	for (char ch : input)
-	{
-		switch (ch)
-		{
-		case '&':
-			output += "&amp;";
-			break;
-		case ' ':
-			output += "+";
-			break;
-		case '<':
-			output += "&lt;";
-			break;
-		case '>':
-			output += "&gt;";
-			break;
-		case '"':
-			output += "&quot;";
-			break;
-		case '\'':
-			output += "&apos;";
-			break;
-		default:
-			output += ch;
-			break;
-		}
-	}
-
-	return output;
-}
-
-std::string EscapeCharForHTML(char ch)
-{
-	switch (ch)
-	{
-	case '&':
-		return "&amp;";
-	case '<':
-		return "&lt;";
-	case '>':
-		return "&gt;";
-	case '"':
-		return "&quot;";
-	case '\'':
-		return "&apos;";
-	default:
-		return std::string(1, ch); // Wrap single char into string
-	}
-}
-
-bool check_string_using_filters(
-    const std::string& input, const std::vector<std::string>& whitelist_terms, const std::vector<std::string>& blacklist_terms)
-{
-	if (!whitelist_terms.empty())
-	{
-		// Search for a whitelisted term
-		for (const auto& term : whitelist_terms)
-		{
-			auto foundPos = input.find(term);
-			if (foundPos != std::string::npos)
+			size_t found = input.find("******", pos);
+			if (found != std::string::npos)
 			{
-				// If a whitelisted term is found, check if any blacklisted term appears
-				for (const auto& bTerm : blacklist_terms)
-				{
-					if (input.find(bTerm) != std::string::npos)
-						return false; // Found a blacklisted term, return false
-				}
-				return true; // No blacklisted term found, return true
-			}
-		}
-		return false; // No whitelisted term found
-	}
-	else
-	{
-		for (const auto& bTerm : blacklist_terms)
-		{
-			if (input.find(bTerm) != std::string::npos)
-				return false; // Found a blacklisted term, return false
-		}
-		return true;
-	}
-}
-
-std::string toCamelCase(const std::string& str)
-{
-	std::string result;
-	bool        capitalizeNext = false;
-
-	for (char ch : str)
-	{
-		if (ch == ' ' || ch == '_')
-		{
-			capitalizeNext = true;
-		}
-		else
-		{
-			if (result.empty())
-			{
-				// Always lowercase the first character
-				result += std::tolower(ch);
-			}
-			else if (capitalizeNext)
-			{
-				result += std::toupper(ch);
-				capitalizeNext = false;
+				unescapedString += input.substr(pos, found - pos); // Add characters before &quot;
+				unescapedString += '"';                            // Replace ****** with "
+				pos = found + 6;                                   // Move past "******"
 			}
 			else
 			{
-				result += std::tolower(ch);
+				unescapedString += input.substr(pos); // Add remaining characters
+				break;
 			}
 		}
-	}
 
-	return result;
-}
+		std::string okPal;
+		pos = 0;
 
-std::string ToLower(std::string str)
-{
-	std::transform(str.begin(), str.end(), str.begin(), tolower);
-	return str;
-}
-
-void ToLowerInline(std::string& str) { std::transform(str.begin(), str.end(), str.begin(), tolower); }
-
-std::string RemoveAllChars(std::string str, char character)
-{
-	str.erase(std::remove(str.begin(), str.end(), character), str.end());
-	return str;
-}
-
-void RemoveAllCharsInline(std::string& str, char character) { str.erase(std::remove(str.begin(), str.end(), character), str.end()); }
-
-bool IsStringHexadecimal(std::string str)
-{
-	if (str.empty())
-	{
-		return false;
-	}
-
-	ToLowerInline(str);
-
-	bool first    = true;
-	bool negative = false;
-	bool found    = false;
-
-	for (char c : str)
-	{
-		if (first)
+		// Find and replace $$$$$$ with #
+		while (pos < unescapedString.length())
 		{
-			first    = false;
-			negative = (c == '-');
+			size_t found = unescapedString.find("$$$$$$", pos);
+			if (found != std::string::npos)
+			{
+				okPal += unescapedString.substr(pos, found - pos); // Add characters before &quot;
+				okPal += '#';                                      // Replace $$$$$$ with #
+				pos = found + 6;                                   // Move past "$$$$$$"
+			}
+			else
+			{
+				okPal += unescapedString.substr(pos); // Add remaining characters
+				break;
+			}
 		}
 
-		if (std::isxdigit(c))
+		return okPal;
+	}
+
+	std::string RemoveTrailingChar(std::string str, char trailingChar)
+	{
+		if (!str.empty() && str.back() == trailingChar)
+			str.pop_back(); // Removes the last character
+
+		return str;
+	}
+
+	std::string EscapeForHTML(const std::string& input)
+	{
+		std::string output;
+		output.reserve(input.size()); // reserve space to reduce reallocations
+
+		for (char ch : input)
 		{
-			found = true;
+			switch (ch)
+			{
+			case '&':
+				output += "&amp;";
+				break;
+			case '<':
+				output += "&lt;";
+				break;
+			case '>':
+				output += "&gt;";
+				break;
+			case '"':
+				output += "&quot;";
+				break;
+			case '\'':
+				output += "&apos;";
+				break;
+			default:
+				output += ch;
+				break;
+			}
 		}
-		else if (!negative)
+
+		return output;
+	}
+
+	std::string EscapeForHTMLIncludingSpaces(const std::string& input)
+	{
+		std::string output;
+		output.reserve(input.size()); // reserve space to reduce reallocations
+
+		for (char ch : input)
 		{
+			switch (ch)
+			{
+			case '&':
+				output += "&amp;";
+				break;
+			case ' ':
+				output += "+";
+				break;
+			case '<':
+				output += "&lt;";
+				break;
+			case '>':
+				output += "&gt;";
+				break;
+			case '"':
+				output += "&quot;";
+				break;
+			case '\'':
+				output += "&apos;";
+				break;
+			default:
+				output += ch;
+				break;
+			}
+		}
+
+		return output;
+	}
+
+	std::string EscapeCharForHTML(char ch)
+	{
+		switch (ch)
+		{
+		case '&':
+			return "&amp;";
+		case '<':
+			return "&lt;";
+		case '>':
+			return "&gt;";
+		case '"':
+			return "&quot;";
+		case '\'':
+			return "&apos;";
+		default:
+			return std::string(1, ch); // Wrap single char into string
+		}
+	}
+
+	bool check_string_using_filters(
+	    const std::string& input, const std::vector<std::string>& whitelist_terms, const std::vector<std::string>& blacklist_terms)
+	{
+		if (!whitelist_terms.empty())
+		{
+			// Search for a whitelisted term
+			for (const auto& term : whitelist_terms)
+			{
+				auto foundPos = input.find(term);
+				if (foundPos != std::string::npos)
+				{
+					// If a whitelisted term is found, check if any blacklisted term appears
+					for (const auto& bTerm : blacklist_terms)
+					{
+						if (input.find(bTerm) != std::string::npos)
+							return false; // Found a blacklisted term, return false
+					}
+					return true; // No blacklisted term found, return true
+				}
+			}
+			return false; // No whitelisted term found
+		}
+		else
+		{
+			for (const auto& bTerm : blacklist_terms)
+			{
+				if (input.find(bTerm) != std::string::npos)
+					return false; // Found a blacklisted term, return false
+			}
+			return true;
+		}
+	}
+
+	std::string toCamelCase(const std::string& str)
+	{
+		std::string result;
+		bool        capitalizeNext = false;
+
+		for (char ch : str)
+		{
+			if (ch == ' ' || ch == '_')
+				capitalizeNext = true;
+			else
+			{
+				if (result.empty())
+					result += std::tolower(ch); // Always lowercase the first character
+				else if (capitalizeNext)
+				{
+					result += std::toupper(ch);
+					capitalizeNext = false;
+				}
+				else
+					result += std::tolower(ch);
+			}
+		}
+
+		return result;
+	}
+
+	std::string ToLower(std::string str)
+	{
+		std::transform(str.begin(), str.end(), str.begin(), tolower);
+		return str;
+	}
+
+	void ToLowerInline(std::string& str) { std::transform(str.begin(), str.end(), str.begin(), tolower); }
+
+	std::string RemoveAllChars(std::string str, char character)
+	{
+		str.erase(std::remove(str.begin(), str.end(), character), str.end());
+		return str;
+	}
+
+	void RemoveAllCharsInline(std::string& str, char character) { str.erase(std::remove(str.begin(), str.end(), character), str.end()); }
+
+	bool IsStringHexadecimal(std::string str)
+	{
+		if (str.empty())
 			return false;
+
+		ToLowerInline(str);
+
+		bool first    = true;
+		bool negative = false;
+		bool found    = false;
+
+		for (char c : str)
+		{
+			if (first)
+			{
+				first    = false;
+				negative = (c == '-');
+			}
+
+			if (std::isxdigit(c))
+				found = true;
+			else if (!negative)
+				return false;
 		}
+
+		return found;
 	}
 
-	return found;
-}
+	std::string ToHex(void* address, bool bNotation) { return ToHex(reinterpret_cast<uint64_t>(address), sizeof(uint64_t), bNotation); }
 
-std::string ToHex(void* address, bool bNotation) { return ToHex(reinterpret_cast<uint64_t>(address), sizeof(uint64_t), bNotation); }
-
-std::string ToHex(uint64_t decimal, size_t width, bool bNotation)
-{
-	std::ostringstream stream;
-	if (bNotation)
+	std::string ToHex(uint64_t decimal, size_t width, bool bNotation)
 	{
-		stream << "0x";
+		std::ostringstream stream;
+		if (bNotation)
+			stream << "0x";
+		stream << std::setfill('0') << std::setw(width) << std::right << std::uppercase << std::hex << decimal;
+		return stream.str();
 	}
-	stream << std::setfill('0') << std::setw(width) << std::right << std::uppercase << std::hex << decimal;
-	return stream.str();
-}
 
-uint64_t ToDecimal(const std::string& hexStr)
-{
-	uint64_t          decimal = 0;
-	std::stringstream stream;
-	stream << std::right << std::uppercase << std::hex << RemoveAllChars(hexStr, '#');
-	stream >> decimal;
-	return decimal;
-}
+	uint64_t ToDecimal(const std::string& hexStr)
+	{
+		uint64_t          decimal = 0;
+		std::stringstream stream;
+		stream << std::right << std::uppercase << std::hex << RemoveAllChars(hexStr, '#');
+		stream >> decimal;
+		return decimal;
+	}
 
-std::string ToDecimal(uint64_t hex, size_t width)
-{
-	std::ostringstream stream;
-	stream << std::setfill('0') << std::setw(width) << std::right << std::uppercase << std::dec << hex;
-	return stream.str();
-}
+	std::string ToDecimal(uint64_t hex, size_t width)
+	{
+		std::ostringstream stream;
+		stream << std::setfill('0') << std::setw(width) << std::right << std::uppercase << std::dec << hex;
+		return stream.str();
+	}
 
-std::string ColorToHex(float colorArray[3], bool bNotation)
-{
-	std::string hexStr = (bNotation ? "#" : "");
-	hexStr += Format::ToHex(static_cast<uint64_t>(colorArray[0]), 2, false);
-	hexStr += Format::ToHex(static_cast<uint64_t>(colorArray[1]), 2, false);
-	hexStr += Format::ToHex(static_cast<uint64_t>(colorArray[2]), 2, false);
-	return hexStr;
-}
+	std::string ColorToHex(float colorArray[3], bool bNotation)
+	{
+		std::string hexStr = (bNotation ? "#" : "");
+		hexStr += Format::ToHex(static_cast<uint64_t>(colorArray[0]), 2, false);
+		hexStr += Format::ToHex(static_cast<uint64_t>(colorArray[1]), 2, false);
+		hexStr += Format::ToHex(static_cast<uint64_t>(colorArray[2]), 2, false);
+		return hexStr;
+	}
 
-uint64_t HexToDecimal(const std::string& hexStr)
-{
-	uint64_t          decimal = 0;
-	std::stringstream stream;
-	stream << std::right << std::uppercase << std::hex << RemoveAllChars(hexStr, '#');
-	stream >> decimal;
-	return decimal;
-}
+	uint64_t HexToDecimal(const std::string& hexStr)
+	{
+		uint64_t          decimal = 0;
+		std::stringstream stream;
+		stream << std::right << std::uppercase << std::hex << RemoveAllChars(hexStr, '#');
+		stream >> decimal;
+		return decimal;
+	}
 } // namespace Format
 
 namespace Math
 {
 #ifndef NO_RLSDK
-float distanceSquared(const FVector& a, const FVector& b)
-{
-	const float dx = a.X - b.X;
-	const float dy = a.Y - b.Y;
-	const float dz = a.Z - b.Z;
-	return dx * dx + dy * dy + dz * dz;
-}
+	float distanceSquared(const FVector& a, const FVector& b)
+	{
+		const float dx = a.X - b.X;
+		const float dy = a.Y - b.Y;
+		const float dz = a.Z - b.Z;
+		return dx * dx + dy * dy + dz * dz;
+	}
 #endif // NO_RLSDK
 } // namespace Math
 
 namespace Helper
 {
-std::optional<json> getJsonFromStr(const std::string& str)
-{
-	try
+#ifndef NO_JSON
+	std::optional<json> getJsonFromStr(const std::string& str)
 	{
-		return json::parse(str);
+		try
+		{
+			return json::parse(str);
+		}
+		catch (...)
+		{
+			LOGERROR("Unable to parse JSON!");
+			return std::nullopt;
+		}
 	}
-	catch (...)
-	{
-		LOGERROR("Unable to parse JSON!");
-		return std::nullopt;
-	}
-}
+#endif
 } // namespace Helper
 
 namespace Files
 {
-void FindPngImages(const fs::path& directory, std::unordered_map<std::string, fs::path>& imageMap)
-{
-	for (const auto& entry : fs::recursive_directory_iterator(directory))
+	void FindPngImages(const fs::path& directory, std::unordered_map<std::string, fs::path>& imageMap)
 	{
-		if (entry.is_regular_file() && entry.path().extension() == ".png")
+		for (const auto& entry : fs::recursive_directory_iterator(directory))
 		{
-			// Get the filename without extension
-			std::string filename = entry.path().stem().string();
-			// Get the full path
-			fs::path filepath = entry.path();
-			// Add to map
-			imageMap[filename] = filepath;
-		}
-	}
-}
-
-void FindPngImages(const fs::path& directory, std::vector<ImageInfo>& image_info)
-{
-	for (const auto& entry : fs::recursive_directory_iterator(directory))
-	{
-		if (entry.is_regular_file() && entry.path().extension() == ".png")
-		{
-			fs::path    filepath = entry.path();
-			std::string filename = filepath.stem().string();
-			image_info.emplace_back(filename, filepath);
-		}
-	}
-}
-
-void FindPngImages(const fs::path& directory, std::map<std::string, ImageInfo>& image_info_map)
-{
-	for (const auto& entry : fs::recursive_directory_iterator(directory))
-	{
-		if (entry.is_regular_file() && entry.path().extension() == ".png")
-		{
-			fs::path    filepath     = entry.path();
-			std::string filename     = filepath.stem().string();
-			image_info_map[filename] = {filename, filepath};
-		}
-	}
-}
-
-void OpenFolder(const fs::path& folderPath)
-{
-	if (fs::exists(folderPath))
-	{
-		ShellExecute(NULL, L"open", folderPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
-	}
-	else
-	{
-		LOG("Folder path does not exist: {}", folderPath.string());
-	}
-}
-
-void FilterLinesInFile(const fs::path& filePath, const std::string& startString)
-{
-	std::fstream file(filePath, std::ios::in | std::ios::out);
-
-	if (!file.is_open())
-	{
-		LOGERROR("Unable to open file {}", filePath.string());
-		return;
-	}
-
-	std::string   line;
-	std::ofstream tempFile("temp.txt"); // temp file to store filtered lines
-
-	if (!tempFile.is_open())
-	{
-		LOGERROR("Unable to create temporary file");
-		return;
-	}
-
-	while (std::getline(file, line))
-	{
-		if (line.substr(0, startString.length()) == startString)
-		{
-			tempFile << line << '\n'; // write the line to temp file if it starts with the given string
+			if (entry.is_regular_file() && entry.path().extension() == ".png")
+			{
+				// Get the filename without extension
+				std::string filename = entry.path().stem().string();
+				// Get the full path
+				fs::path filepath = entry.path();
+				// Add to map
+				imageMap[filename] = filepath;
+			}
 		}
 	}
 
-	file.close();
-	tempFile.close();
-
-	// replace original file with the temp file
-	fs::remove(filePath);             // remove original file
-	fs::rename("temp.txt", filePath); // rename temp file to original file
-
-	LOG("Filtered lines saved to {}", filePath.string());
-}
-
-std::string get_text_content(const fs::path& file_path)
-{
-	if (!fs::exists(file_path))
+	void FindPngImages(const fs::path& directory, std::vector<ImageInfo>& image_info)
 	{
-		LOG("[ERROR] File doesn't exist: '{}'", file_path.string());
-		return std::string();
-	}
-
-	std::ifstream     Temp(file_path);
-	std::stringstream Buffer;
-	Buffer << Temp.rdbuf();
-	return Buffer.str();
-}
-
-json get_json(const fs::path& file_path)
-{
-	json j;
-
-	if (!fs::exists(file_path))
-	{
-		LOG("[ERROR] File doesn't exist: '{}'", file_path.string());
-		return j;
-	}
-
-	try
-	{
-		std::ifstream file(file_path);
-		file >> j;
-	}
-	catch (const std::exception& e)
-	{
-		LOG("[ERROR] Unable to read '{}': {}", file_path.filename().string(), e.what());
-	}
-
-	return j;
-}
-
-bool write_json(const fs::path& file_path, const json& j)
-{
-	try
-	{
-		std::ofstream file(file_path);
-
-		if (file.is_open())
+		for (const auto& entry : fs::recursive_directory_iterator(directory))
 		{
-			file << j.dump(4); // pretty-print with 4 spaces indentation
-			file.close();
+			if (entry.is_regular_file() && entry.path().extension() == ".png")
+			{
+				fs::path    filepath = entry.path();
+				std::string filename = filepath.stem().string();
+				image_info.emplace_back(filename, filepath);
+			}
+		}
+	}
+
+	void FindPngImages(const fs::path& directory, std::map<std::string, ImageInfo>& image_info_map)
+	{
+		for (const auto& entry : fs::recursive_directory_iterator(directory))
+		{
+			if (entry.is_regular_file() && entry.path().extension() == ".png")
+			{
+				fs::path    filepath     = entry.path();
+				std::string filename     = filepath.stem().string();
+				image_info_map[filename] = {filename, filepath};
+			}
+		}
+	}
+
+	void OpenFolder(const fs::path& folderPath)
+	{
+		if (fs::exists(folderPath))
+		{
+			ShellExecute(NULL, L"open", folderPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
 		}
 		else
 		{
-			LOG("[ERROR] Couldn't open file for writing: {}", file_path.string());
+			LOG("Folder path does not exist: {}", folderPath.string());
+		}
+	}
+
+	void FilterLinesInFile(const fs::path& filePath, const std::string& startString)
+	{
+		std::fstream file(filePath, std::ios::in | std::ios::out);
+
+		if (!file.is_open())
+		{
+			LOGERROR("Unable to open file {}", filePath.string());
+			return;
+		}
+
+		std::string   line;
+		std::ofstream tempFile("temp.txt"); // temp file to store filtered lines
+
+		if (!tempFile.is_open())
+		{
+			LOGERROR("Unable to create temporary file");
+			return;
+		}
+
+		while (std::getline(file, line))
+		{
+			if (line.substr(0, startString.length()) == startString)
+			{
+				tempFile << line << '\n'; // write the line to temp file if it starts with the given string
+			}
+		}
+
+		file.close();
+		tempFile.close();
+
+		// replace original file with the temp file
+		fs::remove(filePath);             // remove original file
+		fs::rename("temp.txt", filePath); // rename temp file to original file
+
+		LOG("Filtered lines saved to {}", filePath.string());
+	}
+
+	std::string get_text_content(const fs::path& file_path)
+	{
+		if (!fs::exists(file_path))
+		{
+			LOG("[ERROR] File doesn't exist: '{}'", file_path.string());
+			return std::string();
+		}
+
+		std::ifstream     Temp(file_path);
+		std::stringstream Buffer;
+		Buffer << Temp.rdbuf();
+		return Buffer.str();
+	}
+
+#ifndef NO_JSON
+
+	json get_json(const fs::path& file_path)
+	{
+		json j;
+
+		if (!fs::exists(file_path))
+		{
+			LOG("[ERROR] File doesn't exist: '{}'", file_path.string());
+			return j;
+		}
+
+		try
+		{
+			std::ifstream file(file_path);
+			file >> j;
+		}
+		catch (const std::exception& e)
+		{
+			LOG("[ERROR] Unable to read '{}': {}", file_path.filename().string(), e.what());
+		}
+
+		return j;
+	}
+
+	bool write_json(const fs::path& file_path, const json& j)
+	{
+		try
+		{
+			std::ofstream file(file_path);
+
+			if (file.is_open())
+			{
+				file << j.dump(4); // pretty-print with 4 spaces indentation
+				file.close();
+			}
+			else
+			{
+				LOG("[ERROR] Couldn't open file for writing: {}", file_path.string());
+				return false;
+			}
+
+			return true;
+		}
+		catch (const std::exception& e)
+		{
+			LOG("[ERROR] Unable to write to '{}': {}", file_path.filename().string(), e.what());
 			return false;
 		}
-
-		return true;
 	}
-	catch (const std::exception& e)
-	{
-		LOG("[ERROR] Unable to write to '{}': {}", file_path.filename().string(), e.what());
-		return false;
-	}
-}
+#endif
 
-void appendLineIfNotExist(const fs::path& file, const std::string& line)
-{
-	const std::string        fileName = file.filename().string();
-	std::vector<std::string> lines;
-
-	// Read file if it exists
-	if (fs::exists(file))
+	void appendLineIfNotExist(const fs::path& file, const std::string& line)
 	{
-		std::ifstream in(file);
-		std::string   existingLine;
-		while (std::getline(in, existingLine))
+		const std::string        fileName = file.filename().string();
+		std::vector<std::string> lines;
+
+		// Read file if it exists
+		if (fs::exists(file))
 		{
-			// normalize whitespace and case if you want
-			if (existingLine == line)
+			std::ifstream in(file);
+			std::string   existingLine;
+			while (std::getline(in, existingLine))
 			{
-				LOG("{} already contains line: \"{}\"", fileName, line);
-				return; // bail out if found
+				// normalize whitespace and case if you want
+				if (existingLine == line)
+				{
+					LOG("{} already contains line: \"{}\"", fileName, line);
+					return; // bail out if found
+				}
+				lines.push_back(existingLine);
 			}
-			lines.push_back(existingLine);
+			in.close();
 		}
-		in.close();
+		else
+			LOG("WARNING: File doesn't exist: \"{}\"", file.string());
+
+		// Add line
+		lines.push_back(line);
+
+		// Write back the file
+		{
+			std::ofstream out(file, std::ios::trunc);
+			for (auto& line : lines)
+				out << line << "\n";
+		}
+
+		LOG("Added line to {}: \"{}\"", fileName, line);
 	}
-	else
-		LOG("WARNING: File doesn't exist: \"{}\"", file.string());
-
-	// Add line
-	lines.push_back(line);
-
-	// Write back the file
-	{
-		std::ofstream out(file, std::ios::trunc);
-		for (auto& line : lines)
-			out << line << "\n";
-	}
-
-	LOG("Added line to {}: \"{}\"", fileName, line);
-}
 } // namespace Files
 
+#ifndef NO_JSON
 namespace PluginUpdates
 {
-// global state for all the PluginUpdates:: functions. Can turn all this into a class maybe ong frfr
-PluginUpdaterInfo pluginUpdaterInfo;
-PluginUpdateInfo  updateInfo;
-std::mutex        updateMutex;
+	// global state for all the PluginUpdates:: functions. Can turn all this into a class maybe ong frfr
+	PluginUpdaterInfo pluginUpdaterInfo;
+	PluginUpdateInfo  updateInfo;
+	std::mutex        updateMutex;
 
-/*
-    - Will populate updateInfo with the necessary data
-    - This update check only works if the github release name contains the version number. Like: "v1.2.3" or "Custom Thing v2.1.4" etc.
-*/
-void checkForUpdates(const std::string& modName, const std::string& currentVersion, const std::string& assetName)
-{
-	CurlRequest       req;
-	const std::string repoName = getRepoName(modName);
-	req.url                    = std::format("https://api.github.com/repos/smallest-cock/{}/releases/latest", repoName);
-	LOG("Checking for updates using this URL: {}", req.url);
-	HttpWrapper::SendCurlRequest(req,
-	    [modName, currentVersion, assetName](int code, std::string result)
-	    {
-		    if (code != 200)
-		    {
-			    LOGERROR("Invalid HTTP code: {}. Update check failed!", code);
-			    return;
-		    }
-
-		    auto responseJsonOpt = Helper::getJsonFromStr(result);
-		    if (!responseJsonOpt)
-			    return;
-
-		    std::string assetFileName = (assetName.empty() ? modName : assetName) + ".zip";
-		    auto        updateInfoOpt = getUpdateInfo(*responseJsonOpt, assetFileName);
-		    if (!updateInfoOpt)
-			    return;
-
-		    PluginUpdateInfo& info = *updateInfoOpt;
-		    info.pluginName        = modName;
-		    info.outOfDate         = currentVersion != info.latestVersion;
-
-		    {
-			    std::lock_guard<std::mutex> lock(updateMutex);
-			    updateInfo = info;
-		    }
-
-		    if (info.outOfDate)
-			    LOG("New version available: {}", info.latestVersion);
-		    else
-			    LOG("Plugin is up to date: {}", currentVersion);
-	    });
-}
-
-std::string getRepoName(const std::string& modName)
-{
-	// handle edge case bc CBO repo name isnt PascalCase like the other plugin repos
-	// ... and I dont know what side effects changing the repo name would have, smh bitch
-	if (modName == "CustomBallOnline")
-		return "Custom-Ball-Online";
-
-	return modName;
-}
-
-// the high level plugin-facing function
-void installUpdate(const std::shared_ptr<GameWrapper>& gw)
-{
-	const std::string updateCmd = pluginUpdaterInfo.makeUpdateCmd(updateInfo);
-
-	// check if PluginUpdater's cvar exists (aka if the plugin is loaded)
-	if (_globalCvarManager->getCvar(pluginUpdaterInfo.existenceCheckCvar))
-		_globalCvarManager->executeCommand(updateCmd);
-	else
+	/*
+	    - Will populate updateInfo with the necessary data
+	    - This update check only works if the github release name contains the version number. Like: "v1.2.3" or "Custom Thing v2.1.4" etc.
+	*/
+	void checkForUpdates(const std::string& modName, const std::string& currentVersion, const std::string& assetName)
 	{
-		LOG("{} doesn't seem to be loaded", pluginUpdaterInfo.prettyName);
-		LOG("Attempting to download and install latest version of {}...", pluginUpdaterInfo.prettyName);
-		downloadAndInstallUpdaterPlugin(gw, updateCmd);
-	}
-}
-
-void downloadAndInstallUpdaterPlugin(std::shared_ptr<GameWrapper> gw, const std::string& updateCmd)
-{
-	// set paths
-	const fs::path pluginsFolder = gw->GetBakkesModPath() / "plugins";
-	const fs::path configFile    = gw->GetBakkesModPath() / "cfg" / "plugins.cfg";
-	const fs::path tempDir       = fs::temp_directory_path() / pluginUpdaterInfo.name;
-	fs::create_directories(tempDir);
-	const fs::path downloadFile = tempDir / pluginUpdaterInfo.assetName;
-
-	// get latest release info for PluginUpdater using github API
-	CurlRequest req;
-	req.url = pluginUpdaterInfo.latestReleaseApiUrl;
-	HttpWrapper::SendCurlRequest(req,
-	    [pluginsFolder, configFile, downloadFile, updateCmd](int code, std::string result)
-	    {
-		    try
+		CurlRequest       req;
+		const std::string repoName = getRepoName(modName);
+		req.url                    = std::format("https://api.github.com/repos/smallest-cock/{}/releases/latest", repoName);
+		LOG("Checking for updates using this URL: {}", req.url);
+		HttpWrapper::SendCurlRequest(req,
+		    [modName, currentVersion, assetName](int code, std::string result)
 		    {
 			    if (code != 200)
 			    {
-				    LOGERROR("Invalid HTTP code: {}", code);
-				    LOGERROR("Response body: {}", result);
+				    LOGERROR("Invalid HTTP code: {}. Update check failed!", code);
 				    return;
 			    }
 
@@ -1005,275 +903,351 @@ void downloadAndInstallUpdaterPlugin(std::shared_ptr<GameWrapper> gw, const std:
 			    if (!responseJsonOpt)
 				    return;
 
-			    auto urlOpt = getAssetDownloadUrl(*responseJsonOpt, pluginUpdaterInfo.assetName);
-			    if (!urlOpt)
+			    std::string assetFileName = (assetName.empty() ? modName : assetName) + ".zip";
+			    auto        updateInfoOpt = getUpdateInfo(*responseJsonOpt, assetFileName);
+			    if (!updateInfoOpt)
 				    return;
 
-			    // download/install DLL from latest release
-			    CurlRequest req;
-			    req.verb = "GET";
-			    req.url  = *urlOpt;
-			    HttpWrapper::SendCurlRequest(req,
-			        downloadFile.wstring(),
-			        [pluginsFolder, configFile, updateCmd](int httpCode, std::wstring filePath)
-			        {
-				        if (httpCode != 200)
-				        {
-					        LOGERROR("Invalid HTTP code: {}", httpCode);
-					        return;
-				        }
+			    PluginUpdateInfo& info = *updateInfoOpt;
+			    info.pluginName        = modName;
+			    info.outOfDate         = currentVersion != info.latestVersion;
 
-				        // copy file to plugins folder
-				        LOG("Copying file to plugins folder...");
-				        fs::path downloadedPath{filePath};
-				        fs::copy(downloadedPath, pluginsFolder, fs::copy_options::overwrite_existing);
+			    {
+				    std::lock_guard<std::mutex> lock(updateMutex);
+				    updateInfo = info;
+			    }
 
-				        // delete file in temp directory
-				        LOG("Deleting file in temp directory...");
-				        fs::remove_all(downloadedPath.parent_path());
+			    if (info.outOfDate)
+				    LOG("New version available: {}", info.latestVersion);
+			    else
+				    LOG("Plugin is up to date: {}", currentVersion);
+		    });
+	}
 
-				        // Add line to plugins.cfg
-				        LOG("Adding line to plugins.cfg...");
-				        const std::string pluginLoadCmd = pluginUpdaterInfo.makePluginLoadCmd();
-				        Files::appendLineIfNotExist(configFile, pluginLoadCmd);
+	std::string getRepoName(const std::string& modName)
+	{
+		// handle edge case bc CBO repo name isnt PascalCase like the other plugin repos
+		// ... and I dont know what side effects changing the repo name would have, smh bitch
+		if (modName == "CustomBallOnline")
+			return "Custom-Ball-Online";
 
-				        // this works bc "plugin load X" will wait until the plugin has fully loaded before executing the next command
-				        // ... otherwise, we would've had to do cvar probing in a new thread or something
-				        const std::string finalCmd = std::format("{}; {}", pluginLoadCmd, updateCmd);
-				        _globalCvarManager->executeCommand(finalCmd);
-			        });
-		    }
-		    catch (...)
+		return modName;
+	}
+
+	// the high level plugin-facing function
+	void installUpdate(const std::shared_ptr<GameWrapper>& gw)
+	{
+		const std::string updateCmd = pluginUpdaterInfo.makeUpdateCmd(updateInfo);
+
+		// check if PluginUpdater's cvar exists (aka if the plugin is loaded)
+		if (_globalCvarManager->getCvar(pluginUpdaterInfo.existenceCheckCvar))
+			_globalCvarManager->executeCommand(updateCmd);
+		else
+		{
+			LOG("{} doesn't seem to be loaded", pluginUpdaterInfo.prettyName);
+			LOG("Attempting to download and install latest version of {}...", pluginUpdaterInfo.prettyName);
+			downloadAndInstallUpdaterPlugin(gw, updateCmd);
+		}
+	}
+
+	void downloadAndInstallUpdaterPlugin(std::shared_ptr<GameWrapper> gw, const std::string& updateCmd)
+	{
+		// set paths
+		const fs::path pluginsFolder = gw->GetBakkesModPath() / "plugins";
+		const fs::path configFile    = gw->GetBakkesModPath() / "cfg" / "plugins.cfg";
+		const fs::path tempDir       = fs::temp_directory_path() / pluginUpdaterInfo.name;
+		fs::create_directories(tempDir);
+		const fs::path downloadFile = tempDir / pluginUpdaterInfo.assetName;
+
+		// get latest release info for PluginUpdater using github API
+		CurlRequest req;
+		req.url = pluginUpdaterInfo.latestReleaseApiUrl;
+		HttpWrapper::SendCurlRequest(req,
+		    [pluginsFolder, configFile, downloadFile, updateCmd](int code, std::string result)
 		    {
-			    LOGERROR("Wow something is fricked in the on_complete callback");
-		    }
-	    });
-}
+			    try
+			    {
+				    if (code != 200)
+				    {
+					    LOGERROR("Invalid HTTP code: {}", code);
+					    LOGERROR("Response body: {}", result);
+					    return;
+				    }
 
-std::optional<PluginUpdateInfo> getUpdateInfo(const json& releaseJson, const std::string& assetName)
-{
-	PluginUpdateInfo info{};
+				    auto responseJsonOpt = Helper::getJsonFromStr(result);
+				    if (!responseJsonOpt)
+					    return;
 
-	auto versionStr = getVersionStr(releaseJson);
-	if (!versionStr)
-		return std::nullopt;
-	info.latestVersion = *versionStr;
+				    auto urlOpt = getAssetDownloadUrl(*responseJsonOpt, pluginUpdaterInfo.assetName);
+				    if (!urlOpt)
+					    return;
 
-	auto assetDownloadUrl = getAssetDownloadUrl(releaseJson, assetName);
-	if (!assetDownloadUrl)
-		return std::nullopt;
-	info.assetDownloadUrl = *assetDownloadUrl;
+				    // download/install DLL from latest release
+				    CurlRequest req;
+				    req.verb = "GET";
+				    req.url  = *urlOpt;
+				    HttpWrapper::SendCurlRequest(req,
+				        downloadFile.wstring(),
+				        [pluginsFolder, configFile, updateCmd](int httpCode, std::wstring filePath)
+				        {
+					        if (httpCode != 200)
+					        {
+						        LOGERROR("Invalid HTTP code: {}", httpCode);
+						        return;
+					        }
 
-	info.releaseUrl = releaseJson["html_url"].get<std::string>();
-	return info;
-}
+					        // copy file to plugins folder
+					        LOG("Copying file to plugins folder...");
+					        fs::path downloadedPath{filePath};
+					        fs::copy(downloadedPath, pluginsFolder, fs::copy_options::overwrite_existing);
 
-std::optional<std::string> getAssetDownloadUrl(const json& releaseJson, const std::string& assetName)
-{
-	for (const auto& asset : releaseJson["assets"])
-	{
-		if (asset["name"] == assetName)
-			return asset["browser_download_url"].get<std::string>();
+					        // delete file in temp directory
+					        LOG("Deleting file in temp directory...");
+					        fs::remove_all(downloadedPath.parent_path());
+
+					        // Add line to plugins.cfg
+					        LOG("Adding line to plugins.cfg...");
+					        const std::string pluginLoadCmd = pluginUpdaterInfo.makePluginLoadCmd();
+					        Files::appendLineIfNotExist(configFile, pluginLoadCmd);
+
+					        // this works bc "plugin load X" will wait until the plugin has fully loaded before executing the next command
+					        // ... otherwise, we would've had to do cvar probing in a new thread or something
+					        const std::string finalCmd = std::format("{}; {}", pluginLoadCmd, updateCmd);
+					        _globalCvarManager->executeCommand(finalCmd);
+				        });
+			    }
+			    catch (...)
+			    {
+				    LOGERROR("Wow something is fricked in the on_complete callback");
+			    }
+		    });
 	}
-	return std::nullopt;
-}
 
-std::optional<std::string> getVersionStr(const json& releaseJson)
-{
-	constexpr auto          versionPattern = R"(v?(\d+\.\d+\.\d+(?:[-\w\.]+)?))";
-	static const std::regex re{versionPattern};
-	std::smatch             match;
-
-	auto releaseName = releaseJson["name"].get<std::string>();
-	if (std::regex_search(releaseName, match, re))
-		return match[1].str();
-	else
+	std::optional<PluginUpdateInfo> getUpdateInfo(const json& releaseJson, const std::string& assetName)
 	{
-		LOGERROR("Release name \"{}\" doesn't match regex pattern: \"{}\"", releaseName, versionPattern);
+		PluginUpdateInfo info{};
+
+		auto versionStr = getVersionStr(releaseJson);
+		if (!versionStr)
+			return std::nullopt;
+		info.latestVersion = *versionStr;
+
+		auto assetDownloadUrl = getAssetDownloadUrl(releaseJson, assetName);
+		if (!assetDownloadUrl)
+			return std::nullopt;
+		info.assetDownloadUrl = *assetDownloadUrl;
+
+		info.releaseUrl = releaseJson["html_url"].get<std::string>();
+		return info;
+	}
+
+	std::optional<std::string> getAssetDownloadUrl(const json& releaseJson, const std::string& assetName)
+	{
+		for (const auto& asset : releaseJson["assets"])
+		{
+			if (asset["name"] == assetName)
+				return asset["browser_download_url"].get<std::string>();
+		}
 		return std::nullopt;
 	}
-}
+
+	std::optional<std::string> getVersionStr(const json& releaseJson)
+	{
+		constexpr auto          versionPattern = R"(v?(\d+\.\d+\.\d+(?:[-\w\.]+)?))";
+		static const std::regex re{versionPattern};
+		std::smatch             match;
+
+		auto releaseName = releaseJson["name"].get<std::string>();
+		if (std::regex_search(releaseName, match, re))
+			return match[1].str();
+		else
+		{
+			LOGERROR("Release name \"{}\" doesn't match regex pattern: \"{}\"", releaseName, versionPattern);
+			return std::nullopt;
+		}
+	}
 } // namespace PluginUpdates
-
+#endif
 namespace Process
 {
-void close_handle(HANDLE h)
-{
-	if (h != NULL && h != INVALID_HANDLE_VALUE)
+	void close_handle(HANDLE h)
 	{
-		if (!CloseHandle(h))
+		if (h != NULL && h != INVALID_HANDLE_VALUE)
 		{
-			LOG("CloseHandle failed with error: {}", GetLastError());
-		}
-	}
-	else
-	{
-		LOG("Unable to close handle. The handle is NULL or an invalid value");
-	}
-}
-
-void terminate(HANDLE h)
-{
-	if (h != NULL && h != INVALID_HANDLE_VALUE)
-	{
-		if (!TerminateProcess(h, 1))
-		{
-			LOG("TerminateProcess failed with error: {}", GetLastError());
-		}
-	}
-	else
-	{
-		LOG("Unable to terminate process. The handle is NULL or an invalid value");
-	}
-}
-
-void terminate_created_process(ProcessHandles& pi)
-{
-	terminate(pi.hProcess);
-	close_handle(pi.hProcess);
-	close_handle(pi.hThread);
-}
-
-CreateProcessResult create_process_from_command(const std::string& command)
-{
-	// CreateProcess variables
-	STARTUPINFO         si;
-	PROCESS_INFORMATION pi;
-
-	// Initialize STARTUPINFO & PROCESS_INFORMATION
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-	ZeroMemory(&pi, sizeof(pi));
-
-	std::wstring wide_command = StringUtils::ToWideString(command);
-
-	// initialize result
-	CreateProcessResult result;
-
-	// Create the process to start python script
-	if (CreateProcessW(NULL,     // Application name (set NULL to use command)
-	        wide_command.data(), // Command
-	        NULL,                // Process security attributes
-	        NULL,                // Thread security attributes
-	        FALSE,               // Inherit handles from the calling process
-	        CREATE_NEW_CONSOLE,  // Creation flags (use CREATE_NEW_CONSOLE for async execution)
-	        NULL,                // Use parent's environment block
-	        NULL,                // Use parent's starting directory
-	        &si,                 // Pointer to STARTUPINFO
-	        &pi                  // Pointer to PROCESS_INFORMATION
-	        ))
-	{
-		// Duplicate process handle so it remains valid even after original PROCESS_INFORMATION goes out of scope
-		HANDLE duplicatedProcessHandle = NULL;
-		HANDLE duplicatedThreadHandle  = NULL;
-
-		if (DuplicateHandle(
-		        GetCurrentProcess(), pi.hProcess, GetCurrentProcess(), &duplicatedProcessHandle, 0, FALSE, DUPLICATE_SAME_ACCESS) &&
-		    DuplicateHandle(GetCurrentProcess(), pi.hThread, GetCurrentProcess(), &duplicatedThreadHandle, 0, FALSE, DUPLICATE_SAME_ACCESS))
-		{
-			result.handles.hProcess = duplicatedProcessHandle;
-			result.handles.hThread  = duplicatedThreadHandle;
+			if (!CloseHandle(h))
+			{
+				LOG("CloseHandle failed with error: {}", GetLastError());
+			}
 		}
 		else
 		{
+			LOG("Unable to close handle. The handle is NULL or an invalid value");
+		}
+	}
+
+	void terminate(HANDLE h)
+	{
+		if (h != NULL && h != INVALID_HANDLE_VALUE)
+		{
+			if (!TerminateProcess(h, 1))
+			{
+				LOG("TerminateProcess failed with error: {}", GetLastError());
+			}
+		}
+		else
+		{
+			LOG("Unable to terminate process. The handle is NULL or an invalid value");
+		}
+	}
+
+	void terminate_created_process(ProcessHandles& pi)
+	{
+		terminate(pi.hProcess);
+		close_handle(pi.hProcess);
+		close_handle(pi.hThread);
+	}
+
+	CreateProcessResult create_process_from_command(const std::string& command)
+	{
+		// CreateProcess variables
+		STARTUPINFO         si;
+		PROCESS_INFORMATION pi;
+
+		// Initialize STARTUPINFO & PROCESS_INFORMATION
+		ZeroMemory(&si, sizeof(si));
+		si.cb = sizeof(si);
+		ZeroMemory(&pi, sizeof(pi));
+
+		std::wstring wide_command = StringUtils::ToWideString(command);
+
+		// initialize result
+		CreateProcessResult result;
+
+		// Create the process to start python script
+		if (CreateProcessW(NULL,     // Application name (set NULL to use command)
+		        wide_command.data(), // Command
+		        NULL,                // Process security attributes
+		        NULL,                // Thread security attributes
+		        FALSE,               // Inherit handles from the calling process
+		        CREATE_NEW_CONSOLE,  // Creation flags (use CREATE_NEW_CONSOLE for async execution)
+		        NULL,                // Use parent's environment block
+		        NULL,                // Use parent's starting directory
+		        &si,                 // Pointer to STARTUPINFO
+		        &pi                  // Pointer to PROCESS_INFORMATION
+		        ))
+		{
+			// Duplicate process handle so it remains valid even after original PROCESS_INFORMATION goes out of scope
+			HANDLE duplicatedProcessHandle = NULL;
+			HANDLE duplicatedThreadHandle  = NULL;
+
+			if (DuplicateHandle(
+			        GetCurrentProcess(), pi.hProcess, GetCurrentProcess(), &duplicatedProcessHandle, 0, FALSE, DUPLICATE_SAME_ACCESS) &&
+			    DuplicateHandle(
+			        GetCurrentProcess(), pi.hThread, GetCurrentProcess(), &duplicatedThreadHandle, 0, FALSE, DUPLICATE_SAME_ACCESS))
+			{
+				result.handles.hProcess = duplicatedProcessHandle;
+				result.handles.hThread  = duplicatedThreadHandle;
+			}
+			else
+			{
+				result.status_code = GetLastError();
+			}
+
+			CloseHandle(pi.hProcess);
+			CloseHandle(pi.hThread);
+		}
+		else
+		{
+			// If CreateProcess failed, return the error code
 			result.status_code = GetLastError();
 		}
 
-		CloseHandle(pi.hProcess);
-		CloseHandle(pi.hThread);
+		return result;
 	}
-	else
-	{
-		// If CreateProcess failed, return the error code
-		result.status_code = GetLastError();
-	}
-
-	return result;
-}
 } // namespace Process
 
 #ifndef NO_RLSDK
 namespace Colors
 {
-// returns a AARRGGBB packed 32-bit int
-uint32_t packColor(const FColor& col)
-{
-	return (static_cast<uint32_t>(col.A) << 24) | (static_cast<uint32_t>(col.R) << 16) | (static_cast<uint32_t>(col.G) << 8) |
-	       static_cast<uint32_t>(col.B);
-}
-
-// expects a AARRGGBB packed 32-bit int
-FColor unpackColor(uint32_t packed)
-{
-	return {
-	    static_cast<uint8_t>(packed & 0xFF),         // B
-	    static_cast<uint8_t>((packed >> 8) & 0xFF),  // G
-	    static_cast<uint8_t>((packed >> 16) & 0xFF), // R
-	    static_cast<uint8_t>((packed >> 24) & 0xFF)  // A
-	};
-}
-
-// FColor --> AARRGGBB hex string
-std::string fcolorToHex(const FColor& col)
-{
-	uint32_t           packedInt = packColor(col);
-	std::ostringstream ss;
-	ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << packedInt;
-	return ss.str();
-}
-
-// AARRGGBB hex string --> FColor
-FColor hexToFColor(const std::string& hex)
-{
-	if (hex.size() != 8)
+	// returns a AARRGGBB packed 32-bit int
+	uint32_t packColor(const FColor& col)
 	{
-		LOG("ERROR: Color hex string \"{}\" isn't 8 characters. Falling back to white...");
-		return {255, 255, 255, 255}; // fallback to white
+		return (static_cast<uint32_t>(col.A) << 24) | (static_cast<uint32_t>(col.R) << 16) | (static_cast<uint32_t>(col.G) << 8) |
+		       static_cast<uint32_t>(col.B);
 	}
 
-	uint32_t packed = static_cast<uint32_t>(std::stoul(hex, nullptr, 16));
-	return unpackColor(packed);
-}
+	// expects a AARRGGBB packed 32-bit int
+	FColor unpackColor(uint32_t packed)
+	{
+		return {
+		    static_cast<uint8_t>(packed & 0xFF),         // B
+		    static_cast<uint8_t>((packed >> 8) & 0xFF),  // G
+		    static_cast<uint8_t>((packed >> 16) & 0xFF), // R
+		    static_cast<uint8_t>((packed >> 24) & 0xFF)  // A
+		};
+	}
 
-FLinearColor CvarColorToFLinearColor(const LinearColor& cvarColor)
-{
-	LinearColor fixedCol = cvarColor / 255;
+	// FColor --> AARRGGBB hex string
+	std::string fcolorToHex(const FColor& col)
+	{
+		uint32_t           packedInt = packColor(col);
+		std::ostringstream ss;
+		ss << std::hex << std::uppercase << std::setfill('0') << std::setw(8) << packedInt;
+		return ss.str();
+	}
 
-	return FLinearColor{fixedCol.R, fixedCol.G, fixedCol.B, fixedCol.A};
-}
+	// AARRGGBB hex string --> FColor
+	FColor hexToFColor(const std::string& hex)
+	{
+		if (hex.size() != 8)
+		{
+			LOG("ERROR: Color hex string \"{}\" isn't 8 characters. Falling back to white...");
+			return {255, 255, 255, 255}; // fallback to white
+		}
 
-uint32_t CvarColorToInt(const LinearColor& col) { return FLinearColorToInt(CvarColorToFLinearColor(col)); }
+		uint32_t packed = static_cast<uint32_t>(std::stoul(hex, nullptr, 16));
+		return unpackColor(packed);
+	}
 
-int32_t FLinearColorToInt(const FLinearColor& color)
-{
-	FColor fColor = fLinearColorToFColor(color);
-	return Color(fColor).ToDecimal();
-}
+	FLinearColor CvarColorToFLinearColor(const LinearColor& cvarColor)
+	{
+		LinearColor fixedCol = cvarColor / 255;
 
-std::string fcolorToHexRGBA(const FColor& col)
-{
-	std::stringstream ss;
-	ss << "0x" << std::uppercase << std::setfill('0') << std::hex << std::setw(2) << static_cast<int>(col.R) << std::setw(2)
-	   << static_cast<int>(col.G) << std::setw(2) << static_cast<int>(col.B) << std::setw(2) << static_cast<int>(col.A);
-	return ss.str();
-}
+		return FLinearColor{fixedCol.R, fixedCol.G, fixedCol.B, fixedCol.A};
+	}
 
-FColor hexRGBAtoFColor(const std::string& hex)
-{
-	if (hex.size() != 10 || hex.substr(0, 2) != "0x")
-		throw std::invalid_argument("Invalid color hex string format. Expected format: 0xRRGGBBAA");
+	uint32_t CvarColorToInt(const LinearColor& col) { return FLinearColorToInt(CvarColorToFLinearColor(col)); }
 
-	// Convert hex string (skip '0x')
-	uint32_t value = std::stoul(hex.substr(2), nullptr, 16);
+	int32_t FLinearColorToInt(const FLinearColor& color)
+	{
+		FColor fColor = fLinearColorToFColor(color);
+		return Color(fColor).ToDecimal();
+	}
 
-	FColor col;
-	col.R = (value >> 24) & 0xFF;
-	col.G = (value >> 16) & 0xFF;
-	col.B = (value >> 8) & 0xFF;
-	col.A = value & 0xFF;
+	std::string fcolorToHexRGBA(const FColor& col)
+	{
+		std::stringstream ss;
+		ss << "0x" << std::uppercase << std::setfill('0') << std::hex << std::setw(2) << static_cast<int>(col.R) << std::setw(2)
+		   << static_cast<int>(col.G) << std::setw(2) << static_cast<int>(col.B) << std::setw(2) << static_cast<int>(col.A);
+		return ss.str();
+	}
 
-	return col;
-}
+	FColor hexRGBAtoFColor(const std::string& hex)
+	{
+		if (hex.size() != 10 || hex.substr(0, 2) != "0x")
+			throw std::invalid_argument("Invalid color hex string format. Expected format: 0xRRGGBBAA");
+
+		// Convert hex string (skip '0x')
+		uint32_t value = std::stoul(hex.substr(2), nullptr, 16);
+
+		FColor col;
+		col.R = (value >> 24) & 0xFF;
+		col.G = (value >> 16) & 0xFF;
+		col.B = (value >> 8) & 0xFF;
+		col.A = value & 0xFF;
+
+		return col;
+	}
 } // namespace Colors
 
 // Color class

@@ -1,337 +1,345 @@
 #pragma once
 #include "pch.h"
 #include <unordered_set>
+#include <array>
 
 #ifdef NO_RLSDK
 namespace StringUtils
 {
-inline std::string ToString(const std::wstring& str)
-{
-	if (str.empty())
-		return "";
-	int32_t size = WideCharToMultiByte(CP_UTF8, 0, str.data(), -1, nullptr, 0, nullptr, nullptr);
-	if (size <= 0)
-		return "";
-	std::string return_str(size - 1, 0);
-	WideCharToMultiByte(CP_UTF8, 0, str.data(), -1, return_str.data(), size, nullptr, nullptr);
-	return return_str;
-}
+	inline std::string ToString(const std::wstring& str)
+	{
+		if (str.empty())
+			return "";
+		int32_t size = WideCharToMultiByte(CP_UTF8, 0, str.data(), -1, nullptr, 0, nullptr, nullptr);
+		if (size <= 0)
+			return "";
+		std::string return_str(size - 1, 0);
+		WideCharToMultiByte(CP_UTF8, 0, str.data(), -1, return_str.data(), size, nullptr, nullptr);
+		return return_str;
+	}
 
-inline std::wstring ToWideString(const std::string& str)
-{
-	if (str.empty())
-		return L"";
-	int32_t size = MultiByteToWideChar(CP_UTF8, 0, str.data(), -1, nullptr, 0);
-	if (size <= 0)
-		return L"";
-	std::wstring return_str(size - 1, 0);
-	MultiByteToWideChar(CP_UTF8, 0, str.data(), -1, return_str.data(), size);
-	return return_str;
-}
+	inline std::wstring ToWideString(const std::string& str)
+	{
+		if (str.empty())
+			return L"";
+		int32_t size = MultiByteToWideChar(CP_UTF8, 0, str.data(), -1, nullptr, 0);
+		if (size <= 0)
+			return L"";
+		std::wstring return_str(size - 1, 0);
+		MultiByteToWideChar(CP_UTF8, 0, str.data(), -1, return_str.data(), size);
+		return return_str;
+	}
 } // namespace StringUtils
 #endif
 
 namespace Memory
 {
-struct PatternData
-{
-	uint8_t* arrayOfBytes = nullptr;
-	char*    mask         = nullptr;
-	size_t   length       = 0;
+	struct PatternData
+	{
+		uint8_t* arrayOfBytes = nullptr;
+		char*    mask         = nullptr;
+		size_t   length       = 0;
 
-	PatternData() = default;
-	explicit PatternData(const std::string& sig);
-	~PatternData();
+		PatternData() = default;
+		explicit PatternData(const std::string& sig);
+		~PatternData();
 
-	// disable copy
-	PatternData(const PatternData&)            = delete;
-	PatternData& operator=(const PatternData&) = delete;
+		// disable copy
+		PatternData(const PatternData&)            = delete;
+		PatternData& operator=(const PatternData&) = delete;
 
-	// enable move
-	PatternData(PatternData&& other) noexcept;
-	PatternData& operator=(PatternData&& other) noexcept;
-};
+		// enable move
+		PatternData(PatternData&& other) noexcept;
+		PatternData& operator=(PatternData&& other) noexcept;
+	};
 
-bool      parseSig(const std::string& sig, PatternData& outPattern);
-uintptr_t findPattern(HMODULE module, const std::string& sig);
-uintptr_t findPattern(HMODULE module, const unsigned char* pattern, const char* mask);
-uintptr_t getRipRelativeAddr(uintptr_t startAddr, int offsetToDisplacementInt32);
+	bool      parseSig(const std::string& sig, PatternData& outPattern);
+	uintptr_t findPattern(HMODULE module, const std::string& sig);
+	uintptr_t findPattern(HMODULE module, const unsigned char* pattern, const char* mask);
+	uintptr_t getRipRelativeAddr(uintptr_t startAddr, int offsetToDisplacementInt32);
 } // namespace Memory
 
 namespace Format
 {
-constexpr std::array<char, 53> letters = {'a',
-    'b',
-    'c',
-    'd',
-    'e',
-    'f',
-    'g',
-    'h',
-    'i',
-    'j',
-    'k',
-    'l',
-    'm',
-    'n',
-    'o',
-    'p',
-    'q',
-    'r',
-    's',
-    't',
-    'u',
-    'v',
-    'w',
-    'x',
-    'y',
-    'z',
-    'A',
-    'B',
-    'C',
-    'D',
-    'E',
-    'F',
-    'G',
-    'H',
-    'I',
-    'J',
-    'K',
-    'L',
-    'M',
-    'N',
-    'O',
-    'P',
-    'Q',
-    'R',
-    'S',
-    'T',
-    'U',
-    'V',
-    'W',
-    'X',
-    'Y',
-    'Z',
-    ' '};
+	constexpr std::array<char, 53> letters = {'a',
+	    'b',
+	    'c',
+	    'd',
+	    'e',
+	    'f',
+	    'g',
+	    'h',
+	    'i',
+	    'j',
+	    'k',
+	    'l',
+	    'm',
+	    'n',
+	    'o',
+	    'p',
+	    'q',
+	    'r',
+	    's',
+	    't',
+	    'u',
+	    'v',
+	    'w',
+	    'x',
+	    'y',
+	    'z',
+	    'A',
+	    'B',
+	    'C',
+	    'D',
+	    'E',
+	    'F',
+	    'G',
+	    'H',
+	    'I',
+	    'J',
+	    'K',
+	    'L',
+	    'M',
+	    'N',
+	    'O',
+	    'P',
+	    'Q',
+	    'R',
+	    'S',
+	    'T',
+	    'U',
+	    'V',
+	    'W',
+	    'X',
+	    'Y',
+	    'Z',
+	    ' '};
 
-void construct_label(const std::vector<int>& codes, std::string& out_str);
+	void construct_label(const std::vector<int>& codes, std::string& out_str);
 
-std::string ToASCIIString(std::string str);
+	std::string ToASCIIString(std::string str);
 
-std::string ToHexString(uintptr_t address);
+	std::string ToHexString(uintptr_t address);
 
-inline std::string ToHexString(HRESULT hr)
-{
-	constexpr int hexDigitWidth = sizeof(HRESULT) * 2; // Each byte is 2 hex digits
-	return std::format("0x{:0{}X}", static_cast<unsigned long>(hr), hexDigitWidth);
-}
+	inline std::string ToHexString(HRESULT hr)
+	{
+		constexpr int hexDigitWidth = sizeof(HRESULT) * 2; // Each byte is 2 hex digits
+		return std::format("0x{:0{}X}", static_cast<unsigned long>(hr), hexDigitWidth);
+	}
 
-std::string                       ToHexString(int32_t decimal_val, int32_t min_hex_digits);
-template <typename T> std::string ToHexString(T* ptr_to_obj) { return ToHexString(reinterpret_cast<uintptr_t>(ptr_to_obj)); }
-uintptr_t                         HexToIntPointer(const std::string& hexStr);
+	std::string                       ToHexString(int32_t decimal_val, int32_t min_hex_digits);
+	template <typename T> std::string ToHexString(T* ptr_to_obj) { return ToHexString(reinterpret_cast<uintptr_t>(ptr_to_obj)); }
+	uintptr_t                         HexToIntPointer(const std::string& hexStr);
 
-std::string LinearColorToHex(const LinearColor& color, bool use_alpha = true);
+	std::string LinearColorToHex(const LinearColor& color, bool use_alpha = true);
 
-std::string                         GenRandomString(int length);
-std::vector<std::string>            SplitStrByNewline(const std::string& input);
-std::vector<std::string>            SplitStr(const std::string& str, char delimiter);
-std::vector<std::string>            SplitStr(const std::string& str, const std::string& delimiter);
-std::pair<std::string, std::string> SplitStringInTwo(const std::string& str, const std::string& delimiter);
-std::string                         EscapeBraces(const std::string& str);
-std::string                         EscapeQuotesHTML(const std::string& input);
-std::string                         UnescapeQuotesHTML(const std::string& input);
-std::string                         RemoveTrailingChar(std::string str, char trailingChar);
-std::string                         EscapeForHTML(const std::string& input);
-std::string                         EscapeForHTMLIncludingSpaces(const std::string& input);
-std::string                         EscapeCharForHTML(char ch);
+	std::string                         GenRandomString(int length);
+	std::vector<std::string>            SplitStrByNewline(const std::string& input);
+	std::vector<std::string>            SplitStr(const std::string& str, char delimiter);
+	std::vector<std::string>            SplitStr(const std::string& str, const std::string& delimiter);
+	std::pair<std::string, std::string> SplitStringInTwo(const std::string& str, const std::string& delimiter);
+	std::string                         EscapeBraces(const std::string& str);
+	std::string                         EscapeQuotesHTML(const std::string& input);
+	std::string                         UnescapeQuotesHTML(const std::string& input);
+	std::string                         RemoveTrailingChar(std::string str, char trailingChar);
+	std::string                         EscapeForHTML(const std::string& input);
+	std::string                         EscapeForHTMLIncludingSpaces(const std::string& input);
+	std::string                         EscapeCharForHTML(char ch);
 
-bool check_string_using_filters(
-    const std::string& input, const std::vector<std::string>& whitelist_terms, const std::vector<std::string>& blacklist_terms);
+	bool check_string_using_filters(
+	    const std::string& input, const std::vector<std::string>& whitelist_terms, const std::vector<std::string>& blacklist_terms);
 
-std::string toCamelCase(const std::string& str);
-std::string ToLower(std::string str);
-void        ToLowerInline(std::string& str);
-std::string RemoveAllChars(std::string str, char character);
-void        RemoveAllCharsInline(std::string& str, char character);
+	std::string toCamelCase(const std::string& str);
+	std::string ToLower(std::string str);
+	void        ToLowerInline(std::string& str);
+	std::string RemoveAllChars(std::string str, char character);
+	void        RemoveAllCharsInline(std::string& str, char character);
 
-bool IsStringHexadecimal(std::string str);
+	bool IsStringHexadecimal(std::string str);
 
-std::string ToHex(void* address, bool bNotation = true);
-std::string ToHex(uint64_t decimal, size_t width, bool bNotation = true);
-uint64_t    ToDecimal(const std::string& hexStr);
-std::string ToDecimal(uint64_t hex, size_t width);
+	std::string ToHex(void* address, bool bNotation = true);
+	std::string ToHex(uint64_t decimal, size_t width, bool bNotation = true);
+	uint64_t    ToDecimal(const std::string& hexStr);
+	std::string ToDecimal(uint64_t hex, size_t width);
 
-std::string ColorToHex(float colorsArray[3], bool bNotation);
-uint64_t    HexToDecimal(const std::string& hexStr);
+	std::string ColorToHex(float colorsArray[3], bool bNotation);
+	uint64_t    HexToDecimal(const std::string& hexStr);
 } // namespace Format
 
 namespace Math
 {
 #ifndef NO_RLSDK
-float distanceSquared(const FVector& a, const FVector& b);
+	float distanceSquared(const FVector& a, const FVector& b);
 #endif
 } // namespace Math
 
 namespace Helper
 {
-class ScopedFlag
-{
-	bool& m_flag;
-
-public:
-	ScopedFlag(bool& f) : m_flag(f) { m_flag = true; }
-	~ScopedFlag() { m_flag = false; }
-};
-
-class ScopedBannerLog
-{
-	char     m_fill;
-	uint32_t m_totalLength = 0;
-
-public:
-	ScopedBannerLog(const std::string& label, char fill = '=', size_t totalWidth = 50) : m_fill(fill)
+	class ScopedFlag
 	{
-		if (totalWidth < label.size() + 2)
-			totalWidth = label.size() + 2;
+		bool& m_flag;
 
-		size_t coreLength   = label.size() + 2;
-		size_t sideLen      = (totalWidth - coreLength) / 2;
-		size_t sideLenRight = totalWidth - coreLength - sideLen;
+	public:
+		ScopedFlag(bool& f) : m_flag(f) { m_flag = true; }
+		~ScopedFlag() { m_flag = false; }
+	};
 
-		std::string output(sideLen, m_fill);
-		output += " " + label + " ";
-		output.append(sideLenRight, m_fill);
+	class ScopedBannerLog
+	{
+		char     m_fill;
+		uint32_t m_totalLength = 0;
 
-		m_totalLength = static_cast<uint32_t>(output.size());
-		LOG(output);
-	}
+	public:
+		ScopedBannerLog(const std::string& label, char fill = '=', size_t totalWidth = 50) : m_fill(fill)
+		{
+			if (totalWidth < label.size() + 2)
+				totalWidth = label.size() + 2;
 
-	~ScopedBannerLog() { LOG(std::string(m_totalLength, m_fill)); }
-};
+			size_t coreLength   = label.size() + 2;
+			size_t sideLen      = (totalWidth - coreLength) / 2;
+			size_t sideLenRight = totalWidth - coreLength - sideLen;
 
-std::optional<json> getJsonFromStr(const std::string& str);
+			std::string output(sideLen, m_fill);
+			output += " " + label + " ";
+			output.append(sideLenRight, m_fill);
+
+			m_totalLength = static_cast<uint32_t>(output.size());
+			LOG(output);
+		}
+
+		~ScopedBannerLog() { LOG(std::string(m_totalLength, m_fill)); }
+	};
+
+#ifndef NO_JSON
+	std::optional<json> getJsonFromStr(const std::string& str);
+#endif
 } // namespace Helper
 
 namespace Files
 {
-struct ImageInfo
-{
-	std::string name;
-	fs::path    path;
-};
-
-constexpr std::array<std::string_view, 4> acceptableFormats = {".png", ".jpg", ".jpeg", ".bmp"};
-
-template <typename MapType> void FindImages(const fs::path& directory, MapType& imageMap, bool useStemFilename = false)
-{
-	static const std::unordered_set<std::string_view> formatSet{acceptableFormats.begin(), acceptableFormats.end()};
-
-	for (const auto& entry : fs::recursive_directory_iterator(directory))
+	struct ImageInfo
 	{
-		if (!entry.is_regular_file())
-			continue;
+		std::string name;
+		fs::path    path;
+	};
 
-		auto extensionLower = Format::ToLower(entry.path().extension().string());
-		if (formatSet.contains(extensionLower))
+	constexpr std::array<std::string_view, 4> acceptableFormats = {".png", ".jpg", ".jpeg", ".bmp"};
+
+	template <typename MapType> void FindImages(const fs::path& directory, MapType& imageMap, bool useStemFilename = false)
+	{
+		static const std::unordered_set<std::string_view> formatSet{acceptableFormats.begin(), acceptableFormats.end()};
+
+		for (const auto& entry : fs::recursive_directory_iterator(directory))
 		{
-			std::string filename = useStemFilename ? entry.path().stem().string() : entry.path().filename().string();
-			imageMap[filename]   = entry.path();
+			if (!entry.is_regular_file())
+				continue;
+
+			auto extensionLower = Format::ToLower(entry.path().extension().string());
+			if (formatSet.contains(extensionLower))
+			{
+				std::string filename = useStemFilename ? entry.path().stem().string() : entry.path().filename().string();
+				imageMap[filename]   = entry.path();
+			}
 		}
 	}
-}
 
-template <typename MapType> void FindPngImages(const fs::path& directory, MapType& imageMap)
-{
-	for (const auto& entry : fs::recursive_directory_iterator(directory))
+	template <typename MapType> void FindPngImages(const fs::path& directory, MapType& imageMap)
 	{
-		if (entry.is_regular_file() && entry.path().extension() == ".png")
+		for (const auto& entry : fs::recursive_directory_iterator(directory))
 		{
-			std::string filename = entry.path().stem().string();
-			imageMap[filename]   = entry.path();
+			if (entry.is_regular_file() && entry.path().extension() == ".png")
+			{
+				std::string filename = entry.path().stem().string();
+				imageMap[filename]   = entry.path();
+			}
 		}
 	}
-}
 
-void FindPngImages(const fs::path& directory, std::unordered_map<std::string, fs::path>& imageMap);
-void FindPngImages(const fs::path& directory, std::vector<ImageInfo>& image_info);
-void FindPngImages(const fs::path& directory, std::map<std::string, ImageInfo>& image_info_map);
-void OpenFolder(const fs::path& folderPath);
-void FilterLinesInFile(const fs::path& filePath, const std::string& startString);
+	void FindPngImages(const fs::path& directory, std::unordered_map<std::string, fs::path>& imageMap);
+	void FindPngImages(const fs::path& directory, std::vector<ImageInfo>& image_info);
+	void FindPngImages(const fs::path& directory, std::map<std::string, ImageInfo>& image_info_map);
+	void OpenFolder(const fs::path& folderPath);
+	void FilterLinesInFile(const fs::path& filePath, const std::string& startString);
 
-std::string get_text_content(const fs::path& file_path);
-json        get_json(const fs::path& file_path);
-bool        write_json(const fs::path& file_path, const json& j);
+	std::string get_text_content(const fs::path& file_path);
 
-void appendLineIfNotExist(const fs::path& file, const std::string& line);
+#ifndef NO_JSON
+	json get_json(const fs::path& file_path);
+	bool write_json(const fs::path& file_path, const json& j);
+#endif
+
+	void appendLineIfNotExist(const fs::path& file, const std::string& line);
 } // namespace Files
 
+#ifndef NO_JSON
 namespace PluginUpdates
 {
-struct PluginUpdateInfo
-{
-	std::string pluginName;
-	std::string latestVersion;
-	std::string releaseUrl;
-	std::string assetDownloadUrl;
-	bool        outOfDate = false;
-};
-
-struct PluginUpdaterInfo
-{
-	std::string name                = "PluginUpdater";
-	std::string prettyName          = "Plugin Updater";
-	std::string existenceCheckCvar  = "pluginupdater_unload_delay";
-	std::string updateCommandName   = "pluginupdater_update";
-	std::string assetName           = name + ".dll";
-	std::string latestReleaseApiUrl = "https://api.github.com/repos/smallest-cock/" + name + "/releases/latest";
-
-	// derived helpers
-	std::string makeUpdateCmd(const PluginUpdateInfo& updateInfo) const
+	struct PluginUpdateInfo
 	{
-		return std::format("{} {} \"{}\"", updateCommandName, updateInfo.pluginName, updateInfo.assetDownloadUrl);
-	}
+		std::string pluginName;
+		std::string latestVersion;
+		std::string releaseUrl;
+		std::string assetDownloadUrl;
+		bool        outOfDate = false;
+	};
 
-	std::string makePluginLoadCmd() const { return std::format("plugin load {}", Format::ToLower(name)); }
-};
+	struct PluginUpdaterInfo
+	{
+		std::string name                = "PluginUpdater";
+		std::string prettyName          = "Plugin Updater";
+		std::string existenceCheckCvar  = "pluginupdater_unload_delay";
+		std::string updateCommandName   = "pluginupdater_update";
+		std::string assetName           = name + ".dll";
+		std::string latestReleaseApiUrl = "https://api.github.com/repos/smallest-cock/" + name + "/releases/latest";
 
-extern PluginUpdaterInfo pluginUpdaterInfo;
-extern PluginUpdateInfo  updateInfo;
-extern std::mutex        updateMutex;
+		// derived helpers
+		std::string makeUpdateCmd(const PluginUpdateInfo& updateInfo) const
+		{
+			return std::format("{} {} \"{}\"", updateCommandName, updateInfo.pluginName, updateInfo.assetDownloadUrl);
+		}
 
-void        checkForUpdates(const std::string& modName, const std::string& currentVersion, const std::string& assetName = "");
-std::string getRepoName(const std::string& modName);
-void        installUpdate(const std::shared_ptr<GameWrapper>& gw);
-void        downloadAndInstallUpdaterPlugin(std::shared_ptr<GameWrapper> gw, const std::string& updateCmd);
+		std::string makePluginLoadCmd() const { return std::format("plugin load {}", Format::ToLower(name)); }
+	};
 
-std::optional<PluginUpdateInfo> getUpdateInfo(const json& releaseJson, const std::string& assetName);
-std::optional<std::string>      getAssetDownloadUrl(const json& releaseJson, const std::string& assetName);
-std::optional<std::string>      getVersionStr(const json& releaseJson);
+	extern PluginUpdaterInfo pluginUpdaterInfo;
+	extern PluginUpdateInfo  updateInfo;
+	extern std::mutex        updateMutex;
+
+	void        checkForUpdates(const std::string& modName, const std::string& currentVersion, const std::string& assetName = "");
+	std::string getRepoName(const std::string& modName);
+	void        installUpdate(const std::shared_ptr<GameWrapper>& gw);
+	void        downloadAndInstallUpdaterPlugin(std::shared_ptr<GameWrapper> gw, const std::string& updateCmd);
+
+	std::optional<PluginUpdateInfo> getUpdateInfo(const json& releaseJson, const std::string& assetName);
+	std::optional<std::string>      getAssetDownloadUrl(const json& releaseJson, const std::string& assetName);
+	std::optional<std::string>      getVersionStr(const json& releaseJson);
 } // namespace PluginUpdates
+#endif // NO_JSON
 
 namespace Process
 {
-struct ProcessHandles
-{
-	HANDLE hProcess = NULL;
-	HANDLE hThread  = NULL;
-
-	inline bool is_active() const
+	struct ProcessHandles
 	{
-		return (hProcess != NULL && hProcess != INVALID_HANDLE_VALUE) || (hThread != NULL && hThread != INVALID_HANDLE_VALUE);
-	}
-};
+		HANDLE hProcess = NULL;
+		HANDLE hThread  = NULL;
 
-struct CreateProcessResult
-{
-	DWORD          status_code = ERROR_SUCCESS;
-	ProcessHandles handles;
-};
+		inline bool is_active() const
+		{
+			return (hProcess != NULL && hProcess != INVALID_HANDLE_VALUE) || (hThread != NULL && hThread != INVALID_HANDLE_VALUE);
+		}
+	};
 
-void close_handle(HANDLE h);
-void terminate(HANDLE h);
-void terminate_created_process(ProcessHandles& pi);
+	struct CreateProcessResult
+	{
+		DWORD          status_code = ERROR_SUCCESS;
+		ProcessHandles handles;
+	};
 
-CreateProcessResult create_process_from_command(const std::string& command);
+	void close_handle(HANDLE h);
+	void terminate(HANDLE h);
+	void terminate_created_process(ProcessHandles& pi);
+
+	CreateProcessResult create_process_from_command(const std::string& command);
 } // namespace Process
 
 #ifndef NO_RLSDK
@@ -420,15 +428,15 @@ public:
 
 namespace std
 {
-template <> struct hash<Color>
-{
-	size_t operator()(const Color& other) const { return hash<string>()(other.ToHexAlpha(false)); }
-};
+	template <> struct hash<Color>
+	{
+		size_t operator()(const Color& other) const { return hash<string>()(other.ToHexAlpha(false)); }
+	};
 
-template <> struct hash<CoolerLinearColor>
-{
-	size_t operator()(const CoolerLinearColor& other) const { return hash<string>()(other.ToHexAlpha(false)); }
-};
+	template <> struct hash<CoolerLinearColor>
+	{
+		size_t operator()(const CoolerLinearColor& other) const { return hash<string>()(other.ToHexAlpha(false)); }
+	};
 } // namespace std
 
 // This is a global rainbow color class, hook your own function to the "Tick" function for it to update.
@@ -455,82 +463,82 @@ public:
 // Inline helper functions for different color type conversions.
 namespace Colors
 {
-uint32_t    packColor(const FColor& col);
-FColor      unpackColor(uint32_t packed);
-std::string fcolorToHex(const FColor& col);
-FColor      hexToFColor(const std::string& hex);
+	uint32_t    packColor(const FColor& col);
+	FColor      unpackColor(uint32_t packed);
+	std::string fcolorToHex(const FColor& col);
+	FColor      hexToFColor(const std::string& hex);
 
-inline std::string logColor(const FLinearColor& col) { return std::format("R:{}-G:{}-B:{}-A:{}", col.R, col.G, col.B, col.A); }
-inline std::string logColor(const FColor& col) { return std::format("R:{}-G:{}-B:{}-A:{}", col.R, col.G, col.B, col.A); }
+	inline std::string logColor(const FLinearColor& col) { return std::format("R:{}-G:{}-B:{}-A:{}", col.R, col.G, col.B, col.A); }
+	inline std::string logColor(const FColor& col) { return std::format("R:{}-G:{}-B:{}-A:{}", col.R, col.G, col.B, col.A); }
 
-FLinearColor CvarColorToFLinearColor(const LinearColor& cvarColor);
-uint32_t     CvarColorToInt(const LinearColor& cvarColor);
-int32_t      FLinearColorToInt(const FLinearColor& color);
-std::string  fcolorToHexRGBA(const FColor& col);
-FColor       hexRGBAtoFColor(const std::string& hex);
+	FLinearColor CvarColorToFLinearColor(const LinearColor& cvarColor);
+	uint32_t     CvarColorToInt(const LinearColor& cvarColor);
+	int32_t      FLinearColorToInt(const FLinearColor& color);
+	std::string  fcolorToHexRGBA(const FColor& col);
+	FColor       hexRGBAtoFColor(const std::string& hex);
 
-inline FColor fLinearColorToFColor(const FLinearColor& color)
-{
-	return FColor{static_cast<uint8_t>(color.B * 255),
-	    static_cast<uint8_t>(color.G * 255),
-	    static_cast<uint8_t>(color.R * 255),
-	    static_cast<uint8_t>(color.A * 255)}; // BGRA
-}
-
-inline FLinearColor fColorToFLinearColor(const FColor& color)
-{
-	return FLinearColor{static_cast<float>(color.R) / 255.0f,
-	    static_cast<float>(color.G) / 255.0f,
-	    static_cast<float>(color.B) / 255.0f,
-	    static_cast<float>(color.A) / 255.0f}; // RGBA
-}
-
-inline uint8_t toByte(float val) { return static_cast<uint8_t>(std::clamp(std::round(val * 255.0f), 0.0f, 255.0f)); }
-
-// assumes an RGBA float array
-inline FColor toFColor(const float (&col)[4])
-{
-	FColor fCol{};
-	fCol.R = toByte(col[0]);
-	fCol.G = toByte(col[1]);
-	fCol.B = toByte(col[2]);
-	fCol.A = toByte(col[3]);
-	return fCol;
-}
-
-// Swizzle pixel data (i.e. RGBA -> BGRA) <numChannels, channelA, channelB> ... requires 8-bit channels
-template <uint8_t numChannels, uint8_t channelA, uint8_t channelB> void swizzleChannels(uint8_t* pixelData, size_t numPixels)
-{
-	for (size_t i = 0; i < numPixels; ++i)
+	inline FColor fLinearColorToFColor(const FLinearColor& color)
 	{
-		uint8_t* pixel = &pixelData[i * numChannels];
-		std::swap(pixel[channelA], pixel[channelB]);
+		return FColor{static_cast<uint8_t>(color.B * 255),
+		    static_cast<uint8_t>(color.G * 255),
+		    static_cast<uint8_t>(color.R * 255),
+		    static_cast<uint8_t>(color.A * 255)}; // BGRA
 	}
-}
 
-inline void rgbaToBGRASwizzle(uint8_t* pixelData, size_t numPixels) { swizzleChannels<4, 0, 2>(pixelData, numPixels); }
+	inline FLinearColor fColorToFLinearColor(const FColor& color)
+	{
+		return FLinearColor{static_cast<float>(color.R) / 255.0f,
+		    static_cast<float>(color.G) / 255.0f,
+		    static_cast<float>(color.B) / 255.0f,
+		    static_cast<float>(color.A) / 255.0f}; // RGBA
+	}
 
-// Color to Decimal/Base10
-inline uint32_t HexToDecimal(std::string hexStr) { return Color(hexStr).ToDecimal(); }
-inline uint32_t ColorToDecimal(const Color& color) { return color.ToDecimal(); }
-inline uint32_t LinearToDecimal(const CoolerLinearColor& linearColor) { return linearColor.ToDecimal(); }
+	inline uint8_t toByte(float val) { return static_cast<uint8_t>(std::clamp(std::round(val * 255.0f), 0.0f, 255.0f)); }
 
-// Decimal/Base10 to Color
-inline Color             DecimalToColor(uint32_t decimal) { return Color().FromDecimal(decimal); }
-inline CoolerLinearColor DecimalToLinear(uint32_t decimal) { return CoolerLinearColor().FromDecimal(decimal); }
+	// assumes an RGBA float array
+	inline FColor toFColor(const float (&col)[4])
+	{
+		FColor fCol{};
+		fCol.R = toByte(col[0]);
+		fCol.G = toByte(col[1]);
+		fCol.B = toByte(col[2]);
+		fCol.A = toByte(col[3]);
+		return fCol;
+	}
 
-// Color to Hexidecimal/Base16
-inline std::string DecimalToHex(uint32_t decimal, bool bNotation = true) { return Color().FromDecimal(decimal).ToHex(bNotation); }
-inline std::string ColorToHex(const Color& color, bool bNotation = true) { return color.ToHex(bNotation); }
-inline std::string LinearToHex(const CoolerLinearColor& linearColor, bool bNotation = true) { return linearColor.ToHex(bNotation); }
+	// Swizzle pixel data (i.e. RGBA -> BGRA) <numChannels, channelA, channelB> ... requires 8-bit channels
+	template <uint8_t numChannels, uint8_t channelA, uint8_t channelB> void swizzleChannels(uint8_t* pixelData, size_t numPixels)
+	{
+		for (size_t i = 0; i < numPixels; ++i)
+		{
+			uint8_t* pixel = &pixelData[i * numChannels];
+			std::swap(pixel[channelA], pixel[channelB]);
+		}
+	}
 
-// Hexidecimal/Base16 to Color
-inline Color             HexToColor(std::string hexStr) { return Color(hexStr); }
-inline CoolerLinearColor HexToLinear(std::string hexStr) { return CoolerLinearColor(hexStr); }
+	inline void rgbaToBGRASwizzle(uint8_t* pixelData, size_t numPixels) { swizzleChannels<4, 0, 2>(pixelData, numPixels); }
 
-// Direct Color Conversions
-inline Color             LinearToColor(const CoolerLinearColor& linearColor) { return linearColor.ToColor(); }
-inline CoolerLinearColor ColorToLinear(const Color& color) { return color.ToLinear(); }
+	// Color to Decimal/Base10
+	inline uint32_t HexToDecimal(std::string hexStr) { return Color(hexStr).ToDecimal(); }
+	inline uint32_t ColorToDecimal(const Color& color) { return color.ToDecimal(); }
+	inline uint32_t LinearToDecimal(const CoolerLinearColor& linearColor) { return linearColor.ToDecimal(); }
+
+	// Decimal/Base10 to Color
+	inline Color             DecimalToColor(uint32_t decimal) { return Color().FromDecimal(decimal); }
+	inline CoolerLinearColor DecimalToLinear(uint32_t decimal) { return CoolerLinearColor().FromDecimal(decimal); }
+
+	// Color to Hexidecimal/Base16
+	inline std::string DecimalToHex(uint32_t decimal, bool bNotation = true) { return Color().FromDecimal(decimal).ToHex(bNotation); }
+	inline std::string ColorToHex(const Color& color, bool bNotation = true) { return color.ToHex(bNotation); }
+	inline std::string LinearToHex(const CoolerLinearColor& linearColor, bool bNotation = true) { return linearColor.ToHex(bNotation); }
+
+	// Hexidecimal/Base16 to Color
+	inline Color             HexToColor(std::string hexStr) { return Color(hexStr); }
+	inline CoolerLinearColor HexToLinear(std::string hexStr) { return CoolerLinearColor(hexStr); }
+
+	// Direct Color Conversions
+	inline Color             LinearToColor(const CoolerLinearColor& linearColor) { return linearColor.ToColor(); }
+	inline CoolerLinearColor ColorToLinear(const Color& color) { return color.ToLinear(); }
 } // namespace Colors
 
 #endif // NO_RLSDK

@@ -209,6 +209,7 @@ namespace GUI
 	void SettingsHeader(const char* id, const char* pluginVersion, const ImVec2& size, bool showBorder = false);
 	void OldSettingsFooter(const char* id, const ImVec2& size, bool showBorder = false);
 
+#if !defined(NO_JSON) && !defined(NO_BAKKESMOD)
 	void alt_settings_header(const char*    text,
 	    const char*                         plugin_version,
 	    const std::shared_ptr<GameWrapper>& gw,
@@ -216,7 +217,6 @@ namespace GUI
 	    const ImVec4&                       text_color      = Colors::Pinkish);
 	void alt_settings_footer(const char* text, const char* url, const ImVec4& text_color = Colors::Yellow);
 
-#ifndef NO_JSON
 	void plugin_update_message(const std::shared_ptr<GameWrapper>& gw, bool isPluginUpdater);
 #endif
 } // namespace GUI

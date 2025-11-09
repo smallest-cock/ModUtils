@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "GuiTools.hpp"
 #include "../util/Utils.hpp"
+#include <shellapi.h>
+#pragma comment(lib, "Shlwapi.lib")
 
 namespace GUI
 {
@@ -177,7 +179,7 @@ namespace GUI
 		ImGui::EndChild();
 	}
 
-#ifndef NO_JSON
+#if !defined(NO_JSON) && !defined(NO_BAKKESMOD)
 	void alt_settings_header(const char*    text,
 	    const char*                         currentPluginVersion,
 	    const std::shared_ptr<GameWrapper>& gw,
@@ -213,7 +215,7 @@ namespace GUI
 		ImGui::SetWindowFontScale(1); // undo font scale modification, so it doesnt affect the rest of the UI
 	}
 
-#ifndef NO_JSON
+#if !defined(NO_JSON) && !defined(NO_BAKKESMOD)
 	void plugin_update_message(const std::shared_ptr<GameWrapper>& gw, bool isPluginUpdater)
 	{
 		PluginUpdates::PluginUpdateInfo updateStatus;

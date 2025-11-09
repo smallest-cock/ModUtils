@@ -3,6 +3,8 @@
 #include <optional>
 #include <random>
 #include <regex>
+#include <shellapi.h>
+#pragma comment(lib, "Shlwapi.lib")
 
 namespace Memory
 {
@@ -236,6 +238,7 @@ namespace Format
 		return decimal;
 	}
 
+#ifndef NO_BAKKESMOD
 	std::string LinearColorToHex(const LinearColor& color, bool use_alpha)
 	{
 		// Create a stringstream to format the hex string
@@ -252,6 +255,7 @@ namespace Format
 		// Return the formatted string
 		return ss.str();
 	}
+#endif
 
 	std::string GenRandomString(int length)
 	{
@@ -721,13 +725,9 @@ namespace Files
 	void OpenFolder(const fs::path& folderPath)
 	{
 		if (fs::exists(folderPath))
-		{
 			ShellExecute(NULL, L"open", folderPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
-		}
 		else
-		{
 			LOG("Folder path does not exist: {}", folderPath.string());
-		}
 	}
 
 	void FilterLinesInFile(const fs::path& filePath, const std::string& startString)
@@ -872,7 +872,7 @@ namespace Files
 	}
 } // namespace Files
 
-#ifndef NO_JSON
+#if !defined(NO_JSON) && !defined(NO_BAKKESMOD)
 namespace PluginUpdates
 {
 	// global state for all the PluginUpdates:: functions. Can turn all this into a class maybe ong frfr
@@ -1209,6 +1209,7 @@ namespace Colors
 		return unpackColor(packed);
 	}
 
+#ifndef NO_BAKKESMOD
 	FLinearColor CvarColorToFLinearColor(const LinearColor& cvarColor)
 	{
 		LinearColor fixedCol = cvarColor / 255;
@@ -1217,6 +1218,7 @@ namespace Colors
 	}
 
 	uint32_t CvarColorToInt(const LinearColor& col) { return FLinearColorToInt(CvarColorToFLinearColor(col)); }
+#endif
 
 	int32_t FLinearColorToInt(const FLinearColor& color)
 	{
@@ -1252,28 +1254,15 @@ namespace Colors
 
 // Color class
 Color::Color() : R(255), G(255), B(255), A(255) {}
-
 Color::Color(uint8_t rgba) : R(rgba), G(rgba), B(rgba), A(rgba) {}
-
 Color::Color(int32_t rgba) : R(rgba), G(rgba), B(rgba), A(rgba) {}
-
 Color::Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : R(r), G(g), B(b), A(a) {}
-
 Color::Color(int32_t r, int32_t g, int32_t b, int32_t a) : R(r), G(g), B(b), A(a) {}
-
 Color::Color(float r, float g, float b, float a) : R(255), G(255), B(255), A(255) { FromLinear(CoolerLinearColor(r, g, b, a)); }
-
 Color::Color(const std::string& hexColor) : R(255), G(255), B(255), A(255) { FromHex(hexColor); }
-
 Color::Color(const struct FColor& color) : R(color.R), G(color.G), B(color.B), A(color.A) {}
-
 Color::Color(const Color& color) : R(color.R), G(color.G), B(color.B), A(color.A) {}
-
-Color::Color(float arr[3]) : R(255), G(255), B(255), A(255)
-{
-	FromLinear(CoolerLinearColor(arr[0], arr[1], arr[2], 1.0f));
-} // added by mwah
-
+Color::Color(float arr[3]) : R(255), G(255), B(255), A(255) { FromLinear(CoolerLinearColor(arr[0], arr[1], arr[2], 1.0f)); }
 Color::~Color() {}
 
 struct FColor Color::UnrealColor() const
@@ -1418,54 +1407,38 @@ Color& Color::operator=(const struct FColor& other)
 }
 
 bool Color::operator==(const Color& other) const { return (R == other.R && G == other.G && B == other.B && A == other.A); }
-
 bool Color::operator==(const struct FColor& other) const { return (R == other.R && G == other.G && B == other.B && A == other.A); }
-
 bool Color::operator!=(const Color& other) const { return !(*this == other); }
-
 bool Color::operator!=(const struct FColor& other) const { return !(*this == other); }
-
 bool Color::operator<(const Color& other) const { return (ToHexAlpha(false) < other.ToHexAlpha(false)); }
-
 bool Color::operator>(const Color& other) const { return (ToHexAlpha(false) > other.ToHexAlpha(false)); }
 
 // CoolerLinearColor class
 CoolerLinearColor::CoolerLinearColor() : R(1.0f), G(1.0f), B(1.0f), A(1.0f) {}
-
 CoolerLinearColor::CoolerLinearColor(float rgba) : R(rgba), G(rgba), B(rgba), A(rgba) {}
-
 CoolerLinearColor::CoolerLinearColor(float r, float g, float b, float a) : R(r), G(g), B(b), A(a) {}
-
 CoolerLinearColor::CoolerLinearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : R(1.0f), G(1.0f), B(1.0f), A(1.0f)
 {
 	FromColor(Color(a, g, b, a));
 }
 
 CoolerLinearColor::CoolerLinearColor(const std::string& hexColor) : R(1.0f), G(1.0f), B(1.0f), A(1.0f) { FromHex(hexColor); }
-
 CoolerLinearColor::CoolerLinearColor(const struct FLinearColor& linearColor)
     : R(linearColor.R), G(linearColor.G), B(linearColor.B), A(linearColor.A)
 {
 }
-
 CoolerLinearColor::CoolerLinearColor(const CoolerLinearColor& linearColor)
     : R(linearColor.R), G(linearColor.G), B(linearColor.B), A(linearColor.A)
 {
 }
-
 CoolerLinearColor::~CoolerLinearColor() {}
 
 struct FLinearColor CoolerLinearColor::UnrealColor() const { return FLinearColor{R, G, B, A}; }
-
-Color CoolerLinearColor::ToColor() const { return Color(R, G, B, A); }
-
-uint32_t CoolerLinearColor::ToDecimal() const { return ToColor().ToDecimal(); }
-
-uint32_t CoolerLinearColor::ToDecimalAlpha() const { return ToColor().ToDecimalAlpha(); }
-
-std::string CoolerLinearColor::ToHex(bool bNotation) const { return ToColor().ToHex(bNotation); }
-
-std::string CoolerLinearColor::ToHexAlpha(bool bNotation) const { return ToColor().ToHexAlpha(bNotation); }
+Color               CoolerLinearColor::ToColor() const { return Color(R, G, B, A); }
+uint32_t            CoolerLinearColor::ToDecimal() const { return ToColor().ToDecimal(); }
+uint32_t            CoolerLinearColor::ToDecimalAlpha() const { return ToColor().ToDecimalAlpha(); }
+std::string         CoolerLinearColor::ToHex(bool bNotation) const { return ToColor().ToHex(bNotation); }
+std::string         CoolerLinearColor::ToHexAlpha(bool bNotation) const { return ToColor().ToHexAlpha(bNotation); }
 
 CoolerLinearColor& CoolerLinearColor::FromColor(const Color& color)
 {
@@ -1477,9 +1450,7 @@ CoolerLinearColor& CoolerLinearColor::FromColor(const Color& color)
 }
 
 CoolerLinearColor& CoolerLinearColor::FromDecimal(uint32_t decimalColor) { return FromColor(Color().FromDecimal(decimalColor)); }
-
 CoolerLinearColor& CoolerLinearColor::FromHex(std::string hexColor) { return FromColor(Color(hexColor)); }
-
 CoolerLinearColor& CoolerLinearColor::Cycle(int32_t steps) { return FromColor(ToColor().Cycle(steps)); }
 
 CoolerLinearColor& CoolerLinearColor::operator=(const CoolerLinearColor& other)
@@ -1511,21 +1482,15 @@ bool CoolerLinearColor::operator==(const struct FLinearColor& other) const
 }
 
 bool CoolerLinearColor::operator!=(const CoolerLinearColor& other) const { return !(*this == other); }
-
 bool CoolerLinearColor::operator!=(const struct FLinearColor& other) const { return !(*this == other); }
-
 bool CoolerLinearColor::operator<(const CoolerLinearColor& other) const { return (ToHexAlpha(false) < other.ToHexAlpha(false)); }
-
 bool CoolerLinearColor::operator>(const CoolerLinearColor& other) const { return (ToHexAlpha(false) > other.ToHexAlpha(false)); }
 
 // GRainbowColor class
-Color GRainbowColor::GetByte() { return ByteRainbow; }
-
+Color             GRainbowColor::GetByte() { return ByteRainbow; }
 CoolerLinearColor GRainbowColor::GetLinear() { return LinearRainbow; }
-
-FLinearColor GRainbowColor::GetFLinear() { return {LinearRainbow.R, LinearRainbow.G, LinearRainbow.B, LinearRainbow.A}; }
-
-int32_t GRainbowColor::GetDecimal() { return (GetByte().R << 16) + (GetByte().G << 8) + GetByte().B; }
+FLinearColor      GRainbowColor::GetFLinear() { return {LinearRainbow.R, LinearRainbow.G, LinearRainbow.B, LinearRainbow.A}; }
+int32_t           GRainbowColor::GetDecimal() { return (GetByte().R << 16) + (GetByte().G << 8) + GetByte().B; }
 
 void GRainbowColor::Reset()
 {

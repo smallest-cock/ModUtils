@@ -131,7 +131,9 @@ namespace Format
 	template <typename T> std::string ToHexString(T* ptr_to_obj) { return ToHexString(reinterpret_cast<uintptr_t>(ptr_to_obj)); }
 	uintptr_t                         HexToIntPointer(const std::string& hexStr);
 
+#ifndef NO_BAKKESMOD
 	std::string LinearColorToHex(const LinearColor& color, bool use_alpha = true);
+#endif
 
 	std::string                         GenRandomString(int length);
 	std::vector<std::string>            SplitStrByNewline(const std::string& input);
@@ -271,7 +273,7 @@ namespace Files
 	void appendLineIfNotExist(const fs::path& file, const std::string& line);
 } // namespace Files
 
-#ifndef NO_JSON
+#if !defined(NO_JSON) && !defined(NO_BAKKESMOD)
 namespace PluginUpdates
 {
 	struct PluginUpdateInfo
@@ -314,7 +316,7 @@ namespace PluginUpdates
 	std::optional<std::string>      getAssetDownloadUrl(const json& releaseJson, const std::string& assetName);
 	std::optional<std::string>      getVersionStr(const json& releaseJson);
 } // namespace PluginUpdates
-#endif // NO_JSON
+#endif
 
 namespace Process
 {
@@ -471,11 +473,13 @@ namespace Colors
 	inline std::string logColor(const FLinearColor& col) { return std::format("R:{}-G:{}-B:{}-A:{}", col.R, col.G, col.B, col.A); }
 	inline std::string logColor(const FColor& col) { return std::format("R:{}-G:{}-B:{}-A:{}", col.R, col.G, col.B, col.A); }
 
+#ifndef NO_BAKKESMOD
 	FLinearColor CvarColorToFLinearColor(const LinearColor& cvarColor);
 	uint32_t     CvarColorToInt(const LinearColor& cvarColor);
-	int32_t      FLinearColorToInt(const FLinearColor& color);
-	std::string  fcolorToHexRGBA(const FColor& col);
-	FColor       hexRGBAtoFColor(const std::string& hex);
+#endif
+	int32_t     FLinearColorToInt(const FLinearColor& color);
+	std::string fcolorToHexRGBA(const FColor& col);
+	FColor      hexRGBAtoFColor(const std::string& hex);
 
 	inline FColor fLinearColorToFColor(const FLinearColor& color)
 	{

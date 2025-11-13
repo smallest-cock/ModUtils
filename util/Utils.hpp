@@ -212,6 +212,32 @@ namespace Helper
 		~ScopedBannerLog() { LOG(std::string(m_totalLength, m_fill)); }
 	};
 
+	// Simple RAII scope guard
+	struct ScopedCallback
+	{
+		std::function<void()> m_func;
+		explicit ScopedCallback(std::function<void()> func) : m_func(std::move(func)) {}
+		~ScopedCallback()
+		{
+			if (m_func)
+				m_func();
+		}
+		// optional: disable copy
+		ScopedCallback(const ScopedCallback&)            = delete;
+		ScopedCallback& operator=(const ScopedCallback&) = delete;
+		// allow move
+		ScopedCallback(ScopedCallback&& other) noexcept : m_func(std::move(other.m_func)) { other.m_func = nullptr; }
+		ScopedCallback& operator=(ScopedCallback&& other) noexcept
+		{
+			if (this != &other)
+			{
+				m_func       = std::move(other.m_func);
+				other.m_func = nullptr;
+			}
+			return *this;
+		}
+	};
+
 #ifndef NO_JSON
 	std::optional<json> getJsonFromStr(const std::string& str);
 #endif

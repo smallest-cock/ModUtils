@@ -47,8 +47,21 @@ namespace GUI
 			ImGui::SetTooltip(fmt, std::forward<Args>(args)...);
 	}
 
-	// scoped version of BeginChild/EndChild
-	// Usage: GUI::ScopedChild c{ "SomeLabel", ... };
+// scoped version of BeginChild/EndChild
+// Usage: GUI::ScopedChild c{ "SomeLabel", ... };
+#if IMGUI_VERSION_NUM >= 19000
+	// NEW IMGUI API (>= 1.90): BeginChild(size, child_flags, window_flags)
+	struct ScopedChild
+	{
+		ScopedChild(const char* idStr, const ImVec2& size = ImVec2(0, 0), ImGuiChildFlags childFlags = 0, ImGuiWindowFlags windowFlags = 0)
+		{
+			ImGui::BeginChild(idStr, size, childFlags, windowFlags);
+		}
+
+		~ScopedChild() { ImGui::EndChild(); }
+	};
+#else
+	// OLD IMGUI API (< 1.90): BeginChild(size, border, window_flags)
 	struct ScopedChild
 	{
 		ScopedChild(const char* str_id, const ImVec2& size = ImVec2(0, 0), bool border = false, ImGuiWindowFlags flags = 0)
@@ -58,6 +71,7 @@ namespace GUI
 
 		~ScopedChild() { ImGui::EndChild(); }
 	};
+#endif
 
 	// scoped version of PushID/PopID
 	// Usage: GUI::ScopedID id{ "SomeID" };

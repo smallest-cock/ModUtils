@@ -127,6 +127,17 @@ namespace Format
 		return std::format("0x{:0{}X}", static_cast<unsigned long>(hr), hexDigitWidth);
 	}
 
+	// Case-insensitive check if a substring exists in a string. Efficient, no allocations
+	inline bool iContains(std::string_view text, std::string_view pattern)
+	{
+		auto it = std::search(text.begin(),
+		    text.end(),
+		    pattern.begin(),
+		    pattern.end(),
+		    [](unsigned char c1, unsigned char c2) { return std::tolower(c1) == std::tolower(c2); });
+		return it != text.end();
+	}
+
 	std::string                       ToHexString(int32_t decimal_val, int32_t min_hex_digits);
 	template <typename T> std::string ToHexString(T* ptr_to_obj) { return ToHexString(reinterpret_cast<uintptr_t>(ptr_to_obj)); }
 	uintptr_t                         HexToIntPointer(const std::string& hexStr);

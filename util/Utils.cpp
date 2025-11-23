@@ -318,6 +318,27 @@ namespace Format
 		return tokens;
 	}
 
+	std::vector<std::string> splitAndTrim(const std::string& str, const std::string& delimiter)
+	{
+		auto                     terms = Format::SplitStr(str, delimiter);
+		std::vector<std::string> result;
+
+		for (auto term : terms)
+		{
+			if (term.empty())
+				continue;
+
+			// Trim left
+			term.erase(term.begin(), std::ranges::find_if(term, [](unsigned char ch) { return !std::isspace(ch); }));
+			// Trim right
+			term.erase(std::find_if(term.rbegin(), term.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), term.end());
+
+			if (!term.empty()) // last check after trimming
+				result.push_back(term);
+		}
+		return result;
+	};
+
 	std::pair<std::string, std::string> SplitStringInTwo(const std::string& str, const std::string& delimiter)
 	{
 		size_t pos = str.find(delimiter);

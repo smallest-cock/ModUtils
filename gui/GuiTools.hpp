@@ -73,6 +73,26 @@ namespace GUI
 	};
 #endif
 
+	/**
+	USAGE:
+	    if (ImGui::IsItemHovered())
+	    {
+	        GUI::ScopedTooltip tip{};
+	        ImGui::Text("Hello from tooltip!");
+	        ImGui::Separator();
+	        ImGui::Text("More info here...");
+	    }
+	*/
+	struct ScopedTooltip
+	{
+		ScopedTooltip() { ImGui::BeginTooltip(); }
+		~ScopedTooltip() { ImGui::EndTooltip(); }
+
+		// Non-copyable, non-movable (prevents double EndTooltip calls)
+		ScopedTooltip(const ScopedTooltip&)            = delete;
+		ScopedTooltip& operator=(const ScopedTooltip&) = delete;
+	};
+
 	// scoped version of PushID/PopID
 	// Usage: GUI::ScopedID id{ "SomeID" };
 	struct ScopedID

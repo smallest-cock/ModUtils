@@ -150,6 +150,7 @@ namespace Format
 	std::vector<std::string>            SplitStrByNewline(const std::string& input);
 	std::vector<std::string>            SplitStr(const std::string& str, char delimiter);
 	std::vector<std::string>            SplitStr(const std::string& str, const std::string& delimiter);
+	std::vector<std::string>            splitAndTrim(const std::string& str, const std::string& delimiter);
 	std::pair<std::string, std::string> SplitStringInTwo(const std::string& str, const std::string& delimiter);
 	std::string                         EscapeBraces(const std::string& str);
 	std::string                         EscapeQuotesHTML(const std::string& input);

@@ -47,6 +47,12 @@ namespace GUI
 			ImGui::SetTooltip(fmt, std::forward<Args>(args)...);
 	}
 
+	inline void ToolTip(std::string_view str)
+	{
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("%s", str.data());
+	}
+
 // scoped version of BeginChild/EndChild
 // Usage: GUI::ScopedChild c{ "SomeLabel", ... };
 #if IMGUI_VERSION_NUM >= 19000

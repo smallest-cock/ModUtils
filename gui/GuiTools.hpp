@@ -41,7 +41,7 @@ namespace GUI
 	void centerTextColoredX(const ImVec4& col, const char* text, float offsetCorrection = 0.0f);
 	void CopyButton(const char* label, const char* copyText, float sameLineSpacing = 20.0f);
 
-	template <typename... Args> inline void ToolTip(const char* fmt, Args&&... args)
+	template <typename... Args> inline void ToolTipFmt(const char* fmt, Args&&... args)
 	{
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip(fmt, std::forward<Args>(args)...);

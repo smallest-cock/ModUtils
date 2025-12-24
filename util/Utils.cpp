@@ -748,7 +748,7 @@ namespace Files
 		if (fs::exists(folderPath))
 			ShellExecute(NULL, L"open", folderPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
 		else
-			LOG("Folder path does not exist: {}", folderPath.string());
+			LOGERROR("Folder path does not exist: {}", folderPath.string());
 	}
 
 	void FilterLinesInFile(const fs::path& filePath, const std::string& startString)

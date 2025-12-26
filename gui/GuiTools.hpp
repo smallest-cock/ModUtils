@@ -34,6 +34,7 @@ namespace GUI
 
 	void ClickableLink(const char* label, const char* url, const ImVec4& textColor = ImVec4(1, 1, 1, 1), ImVec2 size = ImVec2(0, 0));
 
+	void AddHoverHand();
 	void Spacing(int amount = 1);
 	void SameLineSpacing_relative(float horizontalSpacingPx);
 	void SameLineSpacing_absolute(float horizontalSpacingPx);

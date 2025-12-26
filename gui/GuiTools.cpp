@@ -102,6 +102,12 @@ namespace GUI
 		}
 	}
 
+	void AddHoverHand()
+	{
+		if (ImGui::IsItemHovered())
+			ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+	}
+
 	void Spacing(int amount)
 	{
 		for (int i = 0; i < amount; ++i)

@@ -165,13 +165,8 @@ namespace GUI
 			float r, g, b, a;
 
 			Color() : r(1.0f), g(1.0f), b(1.0f), a(1.0f) {}
-
-			// Initialize with float values
 			Color(float r, float g, float b, float a) : r(r), g(g), b(b), a(a) {}
-
 			Color(const ImVec4& color) : r(color.w), g(color.x), b(color.y), a(color.z) {}
-
-			// Initialize with an FLinearColor
 			Color(const FLinearColor& color) : r(color.R), g(color.G), b(color.B), a(color.A) {}
 
 			// Initialize with a int32_t color (0xAARRGGBB format)

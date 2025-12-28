@@ -199,16 +199,13 @@ namespace Format
 		out_str.clear();
 
 		for (int code : codes)
-		{
 			out_str += letters[code];
-		}
 	}
 
 	std::string ToASCIIString(std::string str)
 	{
 		// Remove non-ASCII characters
 		str.erase(std::remove_if(str.begin(), str.end(), [](unsigned char c) { return c > 127; }), str.end());
-
 		return str;
 	}
 

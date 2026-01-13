@@ -54,6 +54,14 @@ namespace GUI
 			ImGui::SetTooltip("%s", str.data());
 	}
 
+#define GUI_ToolTip(body)                                                                                                                  \
+	if (ImGui::IsItemHovered())                                                                                                            \
+	{                                                                                                                                      \
+		ImGui::BeginTooltip();                                                                                                             \
+		body;                                                                                                                              \
+		ImGui::EndTooltip();                                                                                                               \
+	}
+
 // scoped version of BeginChild/EndChild
 // Usage: GUI::ScopedChild c{ "SomeLabel", ... };
 #if IMGUI_VERSION_NUM >= 19000

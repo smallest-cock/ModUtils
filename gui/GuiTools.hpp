@@ -142,7 +142,7 @@ namespace GUI {
 			ImGui::SetTooltip("%s", str.data());
 	}
 
-	// }
+	inline void verticalSpacing_relative(float amt) { ImGui::SetCursorPosY(ImGui::GetCursorPosY() + amt); }
 
 #define GUI_ToolTip(body)                                                                                                                  \
 	if (ImGui::IsItemHovered()) {                                                                                                          \

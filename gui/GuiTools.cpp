@@ -4,37 +4,28 @@
 #include <shellapi.h>
 #pragma comment(lib, "Shlwapi.lib")
 
-namespace GUI
-{
-	namespace detail
-	{
-		void coloredTextFormatImpl(const std::string& fmt, std::span<const WordColor> args)
-		{
+namespace GUI {
+	namespace detail {
+		void coloredTextFormatImpl(const std::string &fmt, std::span<const WordColor> args) {
 			size_t argIndex = 0;
 			size_t pos      = 0;
 
-			while (pos < fmt.size())
-			{
-				if (fmt[pos] == '{' && pos + 1 < fmt.size() && fmt[pos + 1] == '}')
-				{
+			while (pos < fmt.size()) {
+				if (fmt[pos] == '{' && pos + 1 < fmt.size() && fmt[pos + 1] == '}') {
 					// Insert a colored word
-					if (argIndex < args.size())
-					{
-						const auto& wc = args[argIndex++];
+					if (argIndex < args.size()) {
+						const auto &wc = args[argIndex++];
 						ImGui::PushStyleColor(ImGuiCol_Text, ImGui::ColorConvertFloat4ToU32(wc.color));
 						ImGui::TextUnformatted(wc.text.c_str());
 						ImGui::PopStyleColor();
 						ImGui::SameLine(0.0f, 0.0f);
 					}
 					pos += 2;
-				}
-				else
-				{
+				} else {
 					// Collect plain text until next {}
 					size_t      next  = fmt.find("{}", pos);
 					std::string plain = fmt.substr(pos, next - pos);
-					if (!plain.empty())
-					{
+					if (!plain.empty()) {
 						ImGui::TextUnformatted(plain.c_str());
 						ImGui::SameLine(0.0f, 0.0f);
 					}
@@ -47,8 +38,7 @@ namespace GUI
 		}
 	} // namespace detail
 
-	namespace Colors
-	{
+	namespace Colors {
 		const ImVec4 White          = {1, 1, 1, 1};
 		const ImVec4 Red            = {1, 0, 0, 1};
 		const ImVec4 Green          = {0, 1, 0, 1};
@@ -57,6 +47,7 @@ namespace GUI
 		const ImVec4 BlueGreen      = {0, 1, 1, 1};
 		const ImVec4 Pinkish        = {1, 0, 1, 1};
 		const ImVec4 LightBlue      = {0.5f, 0.5f, 1.0f, 1.0f};
+		const ImVec4 LighterBlue    = {0.7f, 0.7f, 1.0f, 1.0f};
 		const ImVec4 LightRed       = {1.0f, 0.4f, 0.4f, 1.0f};
 		const ImVec4 VividGreen     = {0.0f, 0.8f, 0.0f, 1.0f};
 		const ImVec4 LightGreen     = {0.5f, 1.0f, 0.5f, 1.0f};
@@ -73,17 +64,15 @@ namespace GUI
 		const ImVec4 Orange         = {1.0f, 0.6f, 0.0f, 1.0f};
 	} // namespace Colors
 
-	void open_link(const char* url)
-	{
+	void open_link(const char *url) {
 		std::wstring wide_url = StringUtils::ToWideString(url);
 		ShellExecute(NULL, L"open", wide_url.c_str(), NULL, NULL, SW_SHOWNORMAL);
 	}
 
-	void open_link(const wchar_t* url) { ShellExecute(NULL, L"open", url, NULL, NULL, SW_SHOWNORMAL); }
+	void open_link(const wchar_t *url) { ShellExecute(NULL, L"open", url, NULL, NULL, SW_SHOWNORMAL); }
 
 	// old bummy shit
-	void ClickableLink(const char* label, const char* url, const ImVec4& textColor, ImVec2 size)
-	{
+	void ClickableLink(const char *label, const char *url, const ImVec4 &textColor, ImVec2 size) {
 		// default size of selectable is just size of label text
 		if (size.x == 0 && size.y == 0)
 			size = ImGui::CalcTextSize(label);
@@ -95,64 +84,54 @@ namespace GUI
 
 		ImGui::PopStyleColor();
 
-		if (ImGui::IsItemHovered())
-		{
+		if (ImGui::IsItemHovered()) {
 			ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
 			ImGui::SetTooltip("%s", url);
 		}
 	}
 
-	void AddHoverHand()
-	{
+	void AddHoverHand() {
 		if (ImGui::IsItemHovered())
 			ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
 	}
 
-	void Spacing(int amount)
-	{
+	void Spacing(int amount) {
 		for (int i = 0; i < amount; ++i)
 			ImGui::Spacing();
 	}
 
-	void SameLineSpacing_relative(float horizontalSpacingPx)
-	{
+	void SameLineSpacing_relative(float horizontalSpacingPx) {
 		ImGui::SameLine();
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + horizontalSpacingPx);
 	}
 
-	void SameLineSpacing_absolute(float horizontalSpacingPx)
-	{
+	void SameLineSpacing_absolute(float horizontalSpacingPx) {
 		ImGui::SameLine();
 		ImGui::SetCursorPosX(horizontalSpacingPx);
 	}
 
-	void centerTextX(const char* text, float offsetCorrection)
-	{
+	void centerTextX(const char *text, float offsetCorrection) {
 		ImVec2 text_size        = ImGui::CalcTextSize(text);
 		float  horizontalOffset = (ImGui::GetContentRegionAvail().x - text_size.x) * 0.5f;
 		ImGui::SetCursorPosX(horizontalOffset + offsetCorrection);
 		ImGui::TextUnformatted(text);
 	}
 
-	void centerTextColoredX(const ImVec4& col, const char* text, float offsetCorrection)
-	{
+	void centerTextColoredX(const ImVec4 &col, const char *text, float offsetCorrection) {
 		ImVec2 text_size        = ImGui::CalcTextSize(text);
 		float  horizontalOffset = (ImGui::GetContentRegionAvail().x - text_size.x) * 0.5f;
 		ImGui::SetCursorPosX(horizontalOffset + offsetCorrection);
 		ImGui::TextColored(col, "%s", text);
 	}
 
-	void CopyButton(const char* label, const char* copyText, float sameLineSpacing)
-	{
+	void CopyButton(const char *label, const char *copyText, float sameLineSpacing) {
 		SameLineSpacing_relative(sameLineSpacing);
 		if (ImGui::Button(label))
 			ImGui::SetClipboardText(copyText);
 	}
 
-	void SettingsHeader(const char* id, const char* pluginVersion, const ImVec2& size, bool showBorder)
-	{
-		if (ImGui::BeginChild(id, size, showBorder))
-		{
+	void SettingsHeader(const char *id, const char *pluginVersion, const ImVec2 &size, bool showBorder) {
+		if (ImGui::BeginChild(id, size, showBorder)) {
 			Spacing(4);
 
 			ImGui::TextColored(Colors::Pinkish, "Plugin made by SSLow");
@@ -165,11 +144,9 @@ namespace GUI
 		ImGui::EndChild();
 	}
 
-	void OldSettingsFooter(const char* id, const ImVec2& size, bool showBorder)
-	{
-		if (ImGui::BeginChild(id, size, showBorder))
-		{
-			constexpr const char* linkText = "Need help? Join the Discord";
+	void OldSettingsFooter(const char *id, const ImVec2 &size, bool showBorder) {
+		if (ImGui::BeginChild(id, size, showBorder)) {
+			constexpr const char *linkText = "Need help? Join the Discord";
 
 			// center the the cursor position horizontally
 			ImVec2 text_size         = ImGui::CalcTextSize(linkText);
@@ -186,12 +163,11 @@ namespace GUI
 	}
 
 #if !defined(NO_JSON) && !defined(NO_BAKKESMOD)
-	void alt_settings_header(const char*    text,
-	    const char*                         currentPluginVersion,
-	    const std::shared_ptr<GameWrapper>& gw,
+	void alt_settings_header(const char    *text,
+	    const char                         *currentPluginVersion,
+	    const std::shared_ptr<GameWrapper> &gw,
 	    bool                                isPluginUpdater,
-	    const ImVec4&                       text_color)
-	{
+	    const ImVec4                       &text_color) {
 		Spacing(4);
 
 		ImGui::TextColored(text_color, "%s", text);
@@ -206,8 +182,7 @@ namespace GUI
 	}
 #endif
 
-	void alt_settings_footer(const char* text, const char* url, const ImVec4& text_color)
-	{
+	void alt_settings_footer(const char *text, const char *url, const ImVec4 &text_color) {
 		ImGui::SetWindowFontScale(1.3); // make link a lil more visible
 
 		// center the the cursor position horizontally
@@ -222,16 +197,14 @@ namespace GUI
 	}
 
 #if !defined(NO_JSON) && !defined(NO_BAKKESMOD)
-	void plugin_update_message(const std::shared_ptr<GameWrapper>& gw, bool isPluginUpdater)
-	{
+	void plugin_update_message(const std::shared_ptr<GameWrapper> &gw, bool isPluginUpdater) {
 		PluginUpdates::PluginUpdateInfo updateStatus;
 		{
 			std::lock_guard<std::mutex> lock(PluginUpdates::updateMutex);
 			updateStatus = PluginUpdates::updateInfo;
 		}
 
-		if (updateStatus.outOfDate)
-		{
+		if (updateStatus.outOfDate) {
 			GUI::SameLineSpacing_relative(20);
 
 			ImGui::TextColored(GUI::Colors::Red, "<------ PLUGIN IS OUT OF DATE!");
@@ -247,8 +220,7 @@ namespace GUI
 
 			GUI::SameLineSpacing_relative(10);
 
-			if (!isPluginUpdater)
-			{
+			if (!isPluginUpdater) {
 				if (ImGui::Button("Update"))
 					PluginUpdates::installUpdate(gw);
 				GUI::ToolTip(

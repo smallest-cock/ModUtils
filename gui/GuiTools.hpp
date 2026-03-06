@@ -304,6 +304,7 @@ namespace GUI {
 		extern const ImVec4 Pinkish;
 
 		extern const ImVec4 LightBlue;
+		extern const ImVec4 LighterBlue;
 		extern const ImVec4 LightRed;
 		extern const ImVec4 LightGreen;
 		extern const ImVec4 ChillGreen;

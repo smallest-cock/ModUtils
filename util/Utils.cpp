@@ -1050,7 +1050,7 @@ namespace Colors {
 		uint32_t packed = 0xFFFFFFFF;
 
 		try {
-			uint32_t packed = static_cast<uint32_t>(std::stoul(hex, nullptr, 16));
+			packed = static_cast<uint32_t>(std::stoul(hex, nullptr, 16));
 		} catch (std::exception &e) {
 			LOGERROR("Invalid FColor hex string passed to std::stoul: \"{}\"", hex);
 			LOGERROR("{}", e.what());

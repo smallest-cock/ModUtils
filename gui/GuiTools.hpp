@@ -2,6 +2,7 @@
 #include "pch.h"
 #include <span>
 
+#if IMGUI_VERSION_NUM < 19000
 static float CalcMaxPopupHeightFromItemCount(int items_count) {
 	ImGuiContext &g = *GImGui;
 	if (items_count <= 0)
@@ -10,7 +11,6 @@ static float CalcMaxPopupHeightFromItemCount(int items_count) {
 }
 
 namespace ImGui {
-
 	/* Custom version of SearchableCombo that works with unordered_map<K, V>
 	 * to include a input field to be able to filter the combo values. */
 	template <typename K, typename V>
@@ -94,6 +94,7 @@ namespace ImGui {
 		return value_changed;
 	}
 }
+#endif
 
 namespace GUI {
 	struct WordColor {
